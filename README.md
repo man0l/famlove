@@ -352,8 +352,10 @@ result that is actually a success.
   not (not e-money, not a payment instrument, not a voucher, not transferable),
   §7 handles the EU right of withdrawal over digital content supplied
   immediately, and checkout collects that consent rather than assuming it.
-  `npm run golive` refuses to pass until the selling entity is named on the
-  page, because a trader has to identify itself before the sale.
+  The selling entity is a constant in `src/lib/legal.ts`, not configuration,
+  because a trader has to identify itself before the sale and a missing
+  environment variable must never be able to publish terms with a blank where
+  the seller's name goes.
 
 ---
 

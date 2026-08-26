@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { LEGAL, entityInSentence } from "@/lib/legal";
+import { LEGAL } from "@/lib/legal";
 import {
   DAILY_GIVE_CEILING,
   MIN_X_ACCOUNT_AGE_DAYS,
@@ -35,21 +35,19 @@ export default function TermsPage() {
       <h1 className="display text-4xl text-chalk">Terms of Service</h1>
       <p className="mt-3 text-sm text-mute">
         Last updated {LEGAL.updated}. These terms are a contract between you and{" "}
-        {entityInSentence()}. Nothing in them takes away rights the law where you
-        live gives you.
+        {LEGAL.entity}. Nothing in them takes away rights the law where you live
+        gives you.
       </p>
 
       <Section n="1" title="Who you are dealing with">
         <p>
           famlove.lol is operated and sold by{" "}
-          <strong className="text-chalk">
-            {LEGAL.entity || "the site operator"}
-          </strong>
-          {LEGAL.companyNumber && `, company number ${LEGAL.companyNumber}`}
-          {LEGAL.vatNumber && `, VAT ${LEGAL.vatNumber}`}
-          {LEGAL.address && `, registered at ${LEGAL.address}`}
-          {LEGAL.country && `, ${LEGAL.country}`}. We are the seller of record
-          for everything you buy here.
+          <strong className="text-chalk">{LEGAL.entity}</strong> (
+          {LEGAL.entityLocal}), a company registered in the {LEGAL.country} with
+          Unified Identification Code (UIC/ЕИК) {LEGAL.uic}, registered address{" "}
+          {LEGAL.address}, {LEGAL.country}. It is built and operated through the{" "}
+          {LEGAL.studio} venture studio. We are the seller of record for
+          everything you buy here.
         </p>
         <p>
           Reach a human at{" "}
@@ -288,7 +286,7 @@ export default function TermsPage() {
 
       <Section n="14" title="Law, and where to complain">
         <p>
-          These terms are governed by the law of {LEGAL.country}, and the courts
+          These terms are governed by the law of the {LEGAL.country}, and the courts
           there have jurisdiction. If you are a consumer resident elsewhere in
           the EU or UK, you keep the mandatory protections and the right to bring
           proceedings in the courts of your own country.

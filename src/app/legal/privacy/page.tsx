@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { LEGAL, entityInSentence } from "@/lib/legal";
+import { LEGAL } from "@/lib/legal";
 import { BOARD_WINDOW_DAYS } from "@/lib/config";
 
 export const metadata: Metadata = {
@@ -20,11 +20,9 @@ export default function PrivacyPage() {
     <article className="mx-auto max-w-2xl px-4 py-12">
       <h1 className="display text-4xl text-chalk">Privacy</h1>
       <p className="mt-3 text-sm text-mute">
-        Last updated {LEGAL.updated}. The data controller is{" "}
-        {entityInSentence()}
-        {LEGAL.address && `, ${LEGAL.address}`}
-        {LEGAL.country && `, ${LEGAL.country}`}. Questions, corrections and
-        deletions:{" "}
+        Last updated {LEGAL.updated}. The data controller is {LEGAL.entity} (
+        {LEGAL.entityLocal}), UIC/ЕИК {LEGAL.uic}, registered at {LEGAL.address},{" "}
+        {LEGAL.country}. Questions, corrections and deletions:{" "}
         <a href={`mailto:${LEGAL.email}`} className="text-love">
           {LEGAL.email}
         </a>
@@ -141,8 +139,12 @@ export default function PrivacyPage() {
         </p>
         <p className="mt-3">
           If we get it wrong you can complain to your local data protection
-          authority; in {LEGAL.country} that is the Commission for Personal Data
-          Protection.
+          authority. In {LEGAL.countryShort} that is the {LEGAL.dpa.name},{" "}
+          {LEGAL.dpa.address},{" "}
+          <a href={`mailto:${LEGAL.dpa.email}`} className="text-love">
+            {LEGAL.dpa.email}
+          </a>
+          .
         </p>
       </Section>
 
