@@ -20,6 +20,22 @@ export function stripeConfigured(): boolean {
   return Boolean(process.env.STRIPE_SECRET_KEY);
 }
 
+/**
+ * Which of three worlds the top-up buttons are living in.
+ *
+ *   live  — a provider is configured; buying works.
+ *   local — no provider, but dev login is on, so jars are granted for free.
+ *   off   — no provider on a real deployment. Buying must not be offered at
+ *           all, because the checkout route will refuse it anyway and a
+ *           button that goes nowhere is worse than no button.
+ */
+export function paymentsMode(): "live" | "local" | "off" {
+  if (stripeConfigured() || lemonConfigured()) return "live";
+  const devJars =
+    process.env.ALLOW_DEV_LOGIN === "1" && process.env.NODE_ENV !== "production";
+  return devJars ? "local" : "off";
+}
+
 export function stripeIsLive(): boolean {
   return /^(sk|rk)_live_/.test(process.env.STRIPE_SECRET_KEY ?? "");
 }

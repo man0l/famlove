@@ -6,7 +6,7 @@ import { givenToday } from "@/lib/queries";
 import { sql } from "@/lib/db";
 import { DAILY_GIVE_CEILING, TIERS } from "@/lib/config";
 import { formatCents, isoDay } from "@/lib/time";
-import { reconcileCheckoutSession, stripeConfigured } from "@/lib/payments";
+import { paymentsMode, reconcileCheckoutSession } from "@/lib/payments";
 import { Sticker } from "@/components/Sticker";
 import { TrustRow } from "@/components/TrustRow";
 
@@ -45,6 +45,7 @@ export default async function WalletPage({
   `) as Record<string, unknown>[];
 
   const empty = user.centsBalance < 1;
+  const payments = paymentsMode();
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
@@ -99,12 +100,25 @@ export default async function WalletPage({
           only choosing how many times you get to do it.
         </p>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        {payments === "off" && (
+          <p className="mt-4 rounded-2xl border border-line bg-ink-2 px-4 py-3 text-sm text-mute">
+            Top-ups aren&apos;t switched on yet. Nothing here can take your
+            money, and nothing is being charged.
+          </p>
+        )}
+
+        <div
+          className={`mt-4 grid gap-3 sm:grid-cols-3 ${
+            payments === "off" ? "pointer-events-none opacity-40" : ""
+          }`}
+          aria-hidden={payments === "off"}
+        >
           {TIERS.map((tier) => (
             <form key={tier.id} action="/api/checkout" method="post">
               <input type="hidden" name="tier" value={tier.id} />
               <button
                 type="submit"
+                disabled={payments === "off"}
                 className={`card card-hover flex h-full w-full flex-col p-5 text-left ${
                   tier.featured
                     ? "border-love/60 bg-love/8 hover:border-love"
@@ -147,8 +161,8 @@ export default async function WalletPage({
           No bonus cents at any tier — $30 buys 3,000¢, not 3,600¢, because the
           moment a cent stops being a cent, &ldquo;one human, one cent&rdquo;
           stops being true.
-          {!stripeConfigured() &&
-            " · Payments are in local mode on this deployment."}
+          {payments === "local" &&
+            " · Payments are in local mode — jars are granted without a card."}
         </p>
       </section>
 
