@@ -123,6 +123,22 @@ function rng(seed) {
 const utcDay = (offset) =>
   new Date(Date.now() + offset * 86_400_000).toISOString().slice(0, 10);
 
+/**
+ * A believable clock time inside `day`.
+ *
+ * Every love needs its own created_at, not the moment the seed ran: the LOVED
+ * tiebreak is "most recent", the wall is ordered newest-first, and a rally
+ * counts by wall-clock window. Give them all one timestamp and every one of
+ * those reads as nonsense — a 24-hour rally showing every love ever cast.
+ * Today's stamps stop at the current time so nothing is dated in the future.
+ */
+function stamp(day, random) {
+  const startOfDay = Date.parse(`${day}T00:00:00.000Z`);
+  const elapsed = Date.now() - startOfDay;
+  const span = Math.max(1000, Math.min(86_400_000, elapsed));
+  return new Date(startOfDay + Math.floor(random() * span)).toISOString();
+}
+
 export async function seedDatabase(sql) {
   const random = rng(20260819);
   const DAYS = 10;
@@ -228,7 +244,7 @@ export async function seedDatabase(sql) {
       for (let i = 0; i < count; i += 1) {
         const giver = shuffled[i];
         if (giver === owners[project.ownerIndex]) continue;
-        rows.push([giver, project.id, day]);
+        rows.push([giver, project.id, day, stamp(day, random)]);
       }
     }
   }
@@ -238,10 +254,10 @@ export async function seedDatabase(sql) {
   for (let i = 0; i < rows.length; i += CHUNK) {
     const chunk = rows.slice(i, i + CHUNK);
     const values = chunk
-      .map((r) => `(${r[0]}, ${r[1]}, '${r[2]}'::date)`)
+      .map((r) => `(${r[0]}, ${r[1]}, '${r[2]}'::date, '${r[3]}'::timestamptz)`)
       .join(",");
     await sql.query(
-      `INSERT INTO loves (from_user_id, project_id, day_utc)
+      `INSERT INTO loves (from_user_id, project_id, day_utc, created_at)
        VALUES ${values} ON CONFLICT DO NOTHING`,
     );
   }

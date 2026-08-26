@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Face } from "@/components/Face";
 import { profilePage } from "@/lib/queries";
 import { currentUser } from "@/lib/session";
+import { Sticker } from "@/components/Sticker";
 
 export const dynamic = "force-dynamic";
 
@@ -29,12 +30,13 @@ export default async function ProfilePage({ params }: Params) {
       <header className="flex items-start gap-4">
         <Face handle={page.handle} avatarUrl={page.avatarUrl} size={72} />
         <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <h1 className="display text-3xl">
             {page.displayName || `@${page.handle}`}
           </h1>
-          <p className="font-mono text-sm text-mute">@{page.handle}</p>
+          <p className="text-sm text-mute">@{page.handle}</p>
           {page.giveStreak > 0 && (
-            <p className="mt-2 inline-block rounded-full border border-love/40 bg-love/5 px-3 py-1 font-mono text-xs text-love">
+            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-love/40 bg-love/10 px-3 py-1 text-sm font-medium text-love">
+              <Sticker name="heart" size={14} />
               {page.giveStreak}-day giving streak
             </p>
           )}
@@ -46,16 +48,14 @@ export default async function ProfilePage({ params }: Params) {
         Nobody writes an ROI thread about a cent — but people do defend a
         41-day streak and a ratio that says they give more than they take.
       */}
-      <section className="mt-8 rounded-xl border border-line bg-ink-2/40 p-5">
-        <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-mute">
-          Public ledger
+      <section className="card mt-8 p-5">
+        <p className="text-xs font-medium text-mute">Public ledger</p>
+        <p className="display mt-2 text-3xl">
+          <span className="tabular text-lime">gave {page.gave}</span>
+          <span className="mx-3 text-line-2">·</span>
+          <span className="tabular text-chalk">got {page.received}</span>
         </p>
-        <p className="mt-3 font-mono text-3xl">
-          <span className="tabular text-love">gave {page.gave}</span>
-          <span className="mx-3 text-line">·</span>
-          <span className="tabular text-chalk">received {page.received}</span>
-        </p>
-        <p className="mt-2 font-mono text-xs text-mute">
+        <p className="mt-2 text-sm text-mute">
           {generous
             ? `Gives ${ratio}× what they take. That's the whole status game here.`
             : "Receives more than they give. Everyone can see that."}
@@ -63,38 +63,34 @@ export default async function ProfilePage({ params }: Params) {
       </section>
 
       {page.project && (
-        <section className="mt-5 rounded-xl border border-line p-5">
-          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-mute">
-            Their project
-          </p>
+        <section className="card card-hover mt-4 p-5">
+          <p className="text-xs font-medium text-mute">Their project</p>
           <Link
             href={`/p/${page.project.slug}`}
             className="mt-2 block transition hover:text-love"
           >
-            <span className="text-lg font-medium">{page.project.name}</span>
+            <span className="display text-xl">{page.project.name}</span>
             <span className="block text-sm text-mute">{page.project.tagline}</span>
           </Link>
-          <p className="tabular mt-2 font-mono text-xs text-mute">
-            {page.project.backers7d} backers this week
+          <p className="tabular mt-2 text-sm text-mute">
+            {page.project.backers7d} people showed up this week
           </p>
         </section>
       )}
 
-      <section className="mt-5 rounded-xl border border-line p-5">
-        <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-mute">
+      <section className="card mt-4 p-5">
+        <p className="text-xs font-medium text-mute">
           Walls they&apos;re on this week
         </p>
         {page.wallsThisWeek.length === 0 ? (
-          <p className="mt-3 font-mono text-sm text-mute">
-            None yet. A cent fixes that.
-          </p>
+          <p className="mt-3 text-sm text-mute">None yet. A cent fixes that.</p>
         ) : (
           <ul className="mt-3 flex flex-wrap gap-2">
             {page.wallsThisWeek.map((wall) => (
               <li key={wall.slug}>
                 <Link
                   href={`/p/${wall.slug}`}
-                  className="block rounded-full border border-line px-3 py-1.5 font-mono text-xs text-mute transition hover:border-love hover:text-love"
+                  className="block rounded-full border border-line px-3.5 py-1.5 text-sm text-mute transition hover:border-love hover:text-love"
                 >
                   {wall.name}
                 </Link>
@@ -105,7 +101,7 @@ export default async function ProfilePage({ params }: Params) {
       </section>
 
       {page.balance !== null && (
-        <p className="mt-6 text-center font-mono text-xs text-mute">
+        <p className="mt-6 text-center text-xs text-mute">
           Only you can see this:{" "}
           <Link href="/wallet" className="text-chalk underline underline-offset-4">
             {page.balance}¢ left in your jar

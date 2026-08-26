@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { centsLedger } from "@/lib/queries";
 import { formatCents } from "@/lib/time";
+import { Sticker } from "@/components/Sticker";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -23,9 +24,10 @@ export default async function CentsPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
-      <h1 className="text-3xl font-semibold tracking-tight">
-        Where every cent goes
-      </h1>
+      <div className="flex items-start justify-between gap-4">
+        <h1 className="display text-4xl">Where every cent goes</h1>
+        <Sticker name="receipt" size={76} float="slow" className="shrink-0" />
+      </div>
       <p className="mt-3 text-mute">
         famlove keeps your cent. It is not a tip, not a donation, and it does
         not reach the person you gave it to — it buys your face on their wall,
@@ -34,7 +36,7 @@ export default async function CentsPage() {
         product. Here is the money.
       </p>
 
-      <section className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-4">
+      <section className="mt-8 grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Cell label="Jars sold" value={ledger.jarsSold.toLocaleString()} />
         <Cell label="Wallets funded" value={ledger.walletsFunded.toLocaleString()} />
         <Cell label="Gross" value={formatCents(ledger.grossCents)} />
@@ -42,9 +44,7 @@ export default async function CentsPage() {
       </section>
 
       <section className="mt-8">
-        <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-mute">
-          What it cost to take the money
-        </h2>
+        <h2 className="display text-2xl">What it cost to take the money</h2>
         <table className="mt-3 w-full font-mono text-sm">
           <tbody>
             <Line label="Gross received" cents={ledger.grossCents} />
@@ -54,7 +54,7 @@ export default async function CentsPage() {
             <Line label="Net" cents={ledger.netCents} strong />
           </tbody>
         </table>
-        <p className="mt-3 font-mono text-xs text-mute">
+        <p className="mt-3 text-sm text-mute">
           The card fee is under a third of the real cost of taking money. VAT,
           currency conversion, refunds and disputes are the rest, and they are
           the reason this sells through a merchant of record rather than raw
@@ -63,11 +63,9 @@ export default async function CentsPage() {
       </section>
 
       <section className="mt-10">
-        <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-mute">
-          What it was spent on
-        </h2>
+        <h2 className="display text-2xl">What it was spent on</h2>
         {ledger.expenses.length === 0 ? (
-          <p className="mt-3 font-mono text-sm text-mute">
+          <p className="mt-3 text-sm text-mute">
             Nothing spent yet.
           </p>
         ) : (
@@ -105,7 +103,7 @@ export default async function CentsPage() {
         <Small label="Loves, all time" value={ledger.lovesAllTime.toLocaleString()} />
       </section>
 
-      <p className="mt-10 font-mono text-xs leading-relaxed text-mute">
+      <p className="mt-10 text-sm leading-relaxed text-mute">
         Unspent balance is refunded in full, on request, no questions — one
         button on your wallet page. Cents you have already given are gone: they
         bought a pixel on somebody&apos;s wall, and that wall is not being
@@ -127,11 +125,9 @@ function Cell({
   accent?: boolean;
 }) {
   return (
-    <div className="bg-ink px-4 py-4">
-      <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-mute">
-        {label}
-      </p>
-      <p className={`tabular mt-1 font-mono text-xl ${accent ? "text-love" : ""}`}>
+    <div className="card px-4 py-4">
+      <p className="text-xs font-medium text-mute">{label}</p>
+      <p className={`tabular display mt-1 text-2xl ${accent ? "text-love" : ""}`}>
         {value}
       </p>
     </div>
@@ -159,11 +155,9 @@ function Line({
 
 function Small({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-line px-4 py-3">
-      <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-mute">
-        {label}
-      </p>
-      <p className="tabular mt-1 font-mono text-lg">{value}</p>
+    <div className="card px-4 py-3">
+      <p className="text-xs font-medium text-mute">{label}</p>
+      <p className="tabular display mt-1 text-xl">{value}</p>
     </div>
   );
 }

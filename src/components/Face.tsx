@@ -1,9 +1,13 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 
+/* Seeded users have no photo, so their tile is all the personality they get.
+   These are deliberately brighter than a "neutral placeholder" would be — a
+   wall of grey circles reads as absence, and absence is the one thing this
+   product must never accidentally communicate. */
 const TILES = [
-  "#3b2d4a", "#1f3b3a", "#432a24", "#23324d", "#3d2233",
-  "#2b3a22", "#4a3520", "#243f4a", "#3a2440", "#1e3a2e",
+  "#7c5cff", "#2fb8a6", "#ff8a5c", "#4d8cf0", "#ff5c9d",
+  "#8fbf3f", "#f0a63f", "#3fb0d6", "#b45cff", "#35b978",
 ];
 
 function tint(handle: string): string {
@@ -48,7 +52,7 @@ export function Face({
     />
   ) : (
     <span
-      className="flex h-full w-full items-center justify-center rounded-full font-mono font-medium tracking-tight text-chalk/80 ring-1 ring-white/10 transition group-hover:ring-love"
+      className="flex h-full w-full items-center justify-center rounded-full font-semibold tracking-tight text-white/90 ring-1 ring-white/15 transition group-hover:ring-love"
       style={{ background: tint(handle), fontSize: Math.max(9, size * 0.32) }}
     >
       {initials(handle)}

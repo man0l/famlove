@@ -1,25 +1,46 @@
 @import "tailwindcss";
 
 /*
- * The design language is a receipt: monospace numbers, hairline rules, one
- * accent, and a lot of black. Everything on this site is a record of who did
- * what, so it should look like one.
+ * Design language, v2.
+ *
+ * v1 was a terminal: near-black, monospace, hairlines. It was legible and it
+ * looked like a developer tool, which is the wrong signal for a product whose
+ * entire job is to feel like a friend showing up for you.
+ *
+ * v2 keeps exactly one thing austere — the receipt. That object has to read as
+ * a real record, because it is the proof the whole product rests on. Around it,
+ * everything is a sticker book: chunky rounded cards, saturated colour, big
+ * friendly type, and puffy 3D stickers. The contrast is the point. The fun
+ * surface gets you to spend a cent; the sober receipt is what you get for it.
  */
 @theme {
-  --color-ink: #0a0a0b;
-  --color-ink-2: #101013;
-  --color-line: #22222a;
-  --color-paper: #f7f4ee;
-  --color-chalk: #ededf0;
-  --color-mute: #8b8b96;
-  --color-love: #ff3d68;
-  --color-love-dim: #7a1b30;
-  --color-gold: #f2c14e;
+  /* Ink, slightly violet so it reads warm rather than clinical. */
+  --color-ink: #0c0a12;
+  --color-ink-2: #16131f;
+  --color-ink-3: #211c2e;
+  --color-line: #2e2740;
+  --color-line-2: #3d3454;
 
+  --color-paper: #fbf8f1;
+  --color-chalk: #f2eff7;
+  --color-mute: #9b93ad;
+
+  /* One brand colour, three supports. Never all four in the same block. */
+  --color-love: #ff3d68;
+  --color-love-soft: #ff85a3;
+  --color-love-dim: #6d1a2e;
+  --color-lime: #c8ff4d;
+  --color-sky: #6aa8ff;
+  --color-butter: #ffd166;
+
+  --font-display: var(--font-bricolage), "Bricolage Grotesque",
+    ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), "Inter", ui-sans-serif, system-ui,
+    -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, "SF Mono", SFMono-Regular, "JetBrains Mono",
     Menlo, Consolas, monospace;
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system,
-    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --radius-card: 26px;
 }
 
 html {
@@ -31,6 +52,12 @@ body {
   color: var(--color-chalk);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  /* A wash of colour so the black never goes flat. */
+  background-image:
+    radial-gradient(58rem 34rem at 8% -8%, rgb(255 61 104 / 0.16), transparent 62%),
+    radial-gradient(46rem 30rem at 96% 2%, rgb(106 168 255 / 0.11), transparent 60%),
+    radial-gradient(38rem 26rem at 52% 108%, rgb(200 255 77 / 0.07), transparent 64%);
+  background-attachment: fixed;
 }
 
 ::selection {
@@ -38,12 +65,40 @@ body {
   color: #fff;
 }
 
+.display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 0.98;
+}
+
 .tabular {
   font-variant-numeric: tabular-nums;
 }
 
-.hairline {
-  border-top: 1px dashed var(--color-line);
+/* A card you could tap with a thumb. */
+.card {
+  border-radius: var(--radius-card);
+  border: 1.5px solid var(--color-line);
+  background: color-mix(in oklab, var(--color-ink-2) 88%, transparent);
+}
+
+.card-hover {
+  transition: transform 180ms cubic-bezier(0.2, 0.9, 0.25, 1),
+    border-color 180ms ease, background-color 180ms ease;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-line-2);
+}
+
+/* Stickers sit at a jaunty angle and wobble when you touch them. */
+.sticker {
+  filter: drop-shadow(0 10px 22px rgb(0 0 0 / 0.45));
+  transition: transform 260ms cubic-bezier(0.2, 0.9, 0.25, 1);
+}
+.sticker:hover {
+  transform: rotate(-4deg) scale(1.05);
 }
 
 /* The perforated edge of a paper receipt. */
@@ -57,17 +112,56 @@ body {
 }
 
 @keyframes land {
-  from { opacity: 0; transform: scale(0.6) translateY(6px); }
-  to   { opacity: 1; transform: scale(1) translateY(0); }
+  from { opacity: 0; transform: scale(0.55) translateY(8px) rotate(-8deg); }
+  60%  { transform: scale(1.08) translateY(0) rotate(2deg); }
+  to   { opacity: 1; transform: scale(1) translateY(0) rotate(0); }
 }
-.land { animation: land 340ms cubic-bezier(0.2, 0.9, 0.25, 1) both; }
+.land { animation: land 420ms cubic-bezier(0.2, 0.9, 0.25, 1) both; }
 
 @keyframes pulse-love {
-  0%, 100% { box-shadow: 0 0 0 0 rgb(255 61 104 / 0.45); }
-  60%      { box-shadow: 0 0 0 14px rgb(255 61 104 / 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgb(255 61 104 / 0.5); }
+  60%      { box-shadow: 0 0 0 16px rgb(255 61 104 / 0); }
 }
-.pulse-love { animation: pulse-love 1.4s ease-out 2; }
+.pulse-love { animation: pulse-love 1.6s ease-out 2; }
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0) rotate(-6deg); }
+  50%      { transform: translateY(-10px) rotate(-2deg); }
+}
+.float-slow { animation: float-slow 5s ease-in-out infinite; }
+
+@keyframes float-slower {
+  0%, 100% { transform: translateY(0) rotate(8deg); }
+  50%      { transform: translateY(-14px) rotate(3deg); }
+}
+.float-slower { animation: float-slower 7s ease-in-out infinite; }
+
+/* Big friendly button. Depth on rest, squash on press — it should feel
+   like pressing a physical thing, because you are spending money. */
+.btn-love {
+  background: var(--color-love);
+  color: #fff;
+  border-radius: 999px;
+  box-shadow: 0 6px 0 0 var(--color-love-dim),
+    0 14px 34px -10px rgb(255 61 104 / 0.6);
+  transition: transform 120ms ease, box-shadow 120ms ease, filter 160ms ease;
+}
+.btn-love:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+.btn-love:active:not(:disabled) {
+  transform: translateY(5px);
+  box-shadow: 0 1px 0 0 var(--color-love-dim),
+    0 6px 18px -10px rgb(255 61 104 / 0.5);
+}
+.btn-love:disabled {
+  background: var(--color-ink-3);
+  color: var(--color-mute);
+  box-shadow: none;
+  cursor: not-allowed;
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .land, .pulse-love { animation: none; }
+  .land, .pulse-love, .float-slow, .float-slower { animation: none; }
+  .sticker, .card-hover, .btn-love { transition: none; }
 }

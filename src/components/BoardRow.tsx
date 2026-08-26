@@ -11,12 +11,19 @@ export function BoardRow({
   metric?: string;
   metricLabel?: string;
 }) {
+  const podium = entry.rank <= 3;
+
   return (
-    <li className="group border-b border-line/60 transition hover:bg-ink-2">
-      <Link href={`/p/${entry.slug}`} className="flex items-center gap-4 px-4 py-3.5">
+    <li className="border-b border-line/50 last:border-0">
+      <Link
+        href={`/p/${entry.slug}`}
+        className="flex items-center gap-3 px-3 py-3 transition hover:bg-ink-2/80 sm:gap-4 sm:px-5"
+      >
         <span
-          className={`tabular w-10 shrink-0 font-mono text-lg ${
-            entry.rank <= 3 ? "text-love" : "text-mute"
+          className={`tabular display grid h-9 w-9 shrink-0 place-items-center rounded-full text-base ${
+            podium
+              ? "bg-love text-white"
+              : "border border-line bg-ink-2 text-mute"
           }`}
         >
           {entry.rank}
@@ -24,8 +31,8 @@ export function BoardRow({
 
         <span className="min-w-0 flex-1">
           <span className="flex items-baseline gap-2">
-            <span className="truncate font-medium">{entry.name}</span>
-            <span className="shrink-0 font-mono text-[11px] text-mute">
+            <span className="truncate font-semibold">{entry.name}</span>
+            <span className="shrink-0 text-xs text-mute">
               @{entry.ownerHandle}
             </span>
           </span>
@@ -35,15 +42,15 @@ export function BoardRow({
         </span>
 
         <span className="hidden md:block">
-          <FaceRow faces={entry.faces} size={26} max={8} />
+          <FaceRow faces={entry.faces} size={28} max={8} />
         </span>
 
-        <span className="w-20 shrink-0 text-right">
-          <span className="tabular block font-mono text-lg">
+        <span className="w-16 shrink-0 text-right sm:w-20">
+          <span className="tabular display block text-xl">
             {metric ?? entry.backers}
           </span>
-          <span className="block font-mono text-[10px] uppercase tracking-[0.14em] text-mute">
-            {metricLabel ?? "backers"}
+          <span className="block text-[11px] text-mute">
+            {metricLabel ?? "showed up"}
           </span>
         </span>
       </Link>

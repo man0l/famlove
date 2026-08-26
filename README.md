@@ -163,6 +163,53 @@ and the rebuttal has to exist before launch.
 
 ---
 
+## The design, and why the receipt is the ugly part
+
+v1 of this UI was a terminal — near-black, monospace, hairline rules. It was
+legible, and it looked like a developer tool, which is the wrong signal for a
+product whose job is to feel like a friend showing up for you. People under 25
+do not spend money on things that look like a config file.
+
+v2 keeps exactly one thing austere: **the receipt**. That object has to read as
+a real record, because it is the proof the entire product rests on. Everything
+around it is a sticker book — chunky rounded cards, saturated colour, a heavy
+display face, and puffy 3D stickers. The contrast is the point. The playful
+surface gets you to spend a cent; the sober receipt is what you get for it.
+
+### Making a cent feel safe to spend
+
+Nobody hesitates over $3 because $3 is a lot. They hesitate because they don't
+know whether it renews, whether they can undo it, who ends up holding their card
+number, and whether they'll get carried away. `TrustRow` answers exactly those
+four, next to the button rather than in a FAQ — and each line is enforced in
+code, not merely promised:
+
+| Claim | Enforced by |
+| --- | --- |
+| No subscription | One-off Checkout sessions. No prices, no billing cycle. |
+| Refund anytime | `/api/refund` — unspent balance, in full, no questions |
+| We never see your card | Hosted Checkout; we store a fingerprint, never a PAN |
+| You can't overspend | `one_love_per_day` + the 60/day ceiling, in the database |
+
+Tiers are priced in **acts, not dollars** — "$10 · 1,000 people" rather than
+"$10 · 1,000 credits" — because the dollar is the friction and the act is the
+product. Every project page carries a *What a cent buys* card stating plainly
+that the cent stays with famlove and never reaches the owner, which is the
+same sentence that keeps this out of money transmission.
+
+### Generated assets
+
+`npm run assets` regenerates the stickers with `gpt-image-2` from prompts kept
+in `scripts/generate-assets.mjs`, then downscales them to WebP (7.8 MB of PNG
+masters → 166 KB shipped). The PNGs are committed as masters because
+regeneration is non-deterministic.
+
+The rule they follow: **generated art is decoration and never carries
+information.** Every sticker is `aria-hidden`; every number, face, rank and
+receipt on the site is rendered from the database as real text. A product whose
+entire claim is "this actually happened" cannot have an illustration implying
+something did.
+
 ## Stack
 
 Next.js 15 (App Router) on Vercel · Lakebase Postgres on Neon via

@@ -14,7 +14,7 @@ export const metadata: Metadata = { title: "Terms" };
 export default function TermsPage() {
   return (
     <article className="mx-auto max-w-2xl px-4 py-12 text-sm leading-relaxed text-mute">
-      <h1 className="text-3xl font-semibold tracking-tight text-chalk">Terms</h1>
+      <h1 className="display text-4xl text-chalk">Terms</h1>
 
       <Section title="What you are buying">
         Cents are credit inside famlove, used to place your avatar on a project
@@ -60,7 +60,7 @@ export default function TermsPage() {
         merchant is the seller of record and handles tax.
       </Section>
 
-      <p className="mt-10 font-mono text-xs">
+      <p className="mt-10 text-sm">
         Questions, refunds, deletions: reply to any famlove email or contact the
         operator listed at /cents.
       </p>
@@ -71,9 +71,7 @@ export default function TermsPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mt-8">
-      <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-chalk">
-        {title}
-      </h2>
+      <h2 className="display text-xl text-chalk">{title}</h2>
       <p className="mt-2">{children}</p>
     </section>
   );

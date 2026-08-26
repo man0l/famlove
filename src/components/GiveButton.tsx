@@ -49,19 +49,26 @@ export function GiveButton({
 
   if (!signedIn) {
     return (
-      <a
-        href="/join"
-        className="block w-full rounded-xl bg-love px-5 py-3.5 text-center font-mono text-sm font-semibold text-white transition hover:brightness-110"
-      >
-        Sign in with X to give 1¢
-      </a>
+      <div>
+        <a
+          href="/join"
+          className="btn-love block w-full px-5 py-4 text-center font-semibold"
+        >
+          Show up for this · 1¢
+        </a>
+        <p className="mt-2.5 text-center text-xs text-mute">
+          Sign in with X first. One cent, capped at one a day — you literally
+          cannot spend more here.
+        </p>
+      </div>
     );
   }
 
   if (isOwner) {
     return (
-      <p className="rounded-xl border border-dashed border-line px-5 py-3.5 text-center font-mono text-xs text-mute">
-        This one&apos;s yours. You can&apos;t show up for yourself.
+      <p className="rounded-2xl border border-dashed border-line px-5 py-4 text-center text-sm text-mute">
+        This one&apos;s yours. You can&apos;t show up for yourself — that&apos;s
+        rather the point.
       </p>
     );
   }
@@ -83,10 +90,11 @@ export function GiveButton({
 
   if (lovedToday) {
     return (
-      <div className="rounded-xl border border-love/40 bg-love/5 px-5 py-3.5 text-center">
-        <p className="font-mono text-sm text-love">You showed up today. ♥</p>
-        <p className="mt-1 font-mono text-xs text-mute">
-          Your cap resets at 00:00 UTC. One per person, per project, per day.
+      <div className="rounded-[26px] border border-love/40 bg-love/10 px-5 py-5 text-center">
+        <p className="display text-lg text-love">You showed up today ♥</p>
+        <p className="mt-1.5 text-sm text-mute">
+          That&apos;s your one. Resets at 00:00 UTC — and no, you can&apos;t
+          buy another.
         </p>
       </div>
     );
@@ -130,28 +138,30 @@ export function GiveButton({
         type="button"
         onClick={send}
         disabled={state.kind === "sending" || viewerBalance < 1}
-        className="pulse-love w-full rounded-xl bg-love px-5 py-3.5 font-mono text-sm font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:bg-love-dim disabled:opacity-70"
+        className="btn-love pulse-love w-full px-5 py-4 text-base font-semibold"
       >
         {state.kind === "sending"
           ? "…"
           : viewerBalance < 1
             ? "Your jar is empty"
-            : "Give 1¢ ♥"}
+            : "Show up for this · 1¢ ♥"}
       </button>
 
-      {viewerBalance < 1 && (
+      {viewerBalance < 1 ? (
         <a
           href="/wallet"
-          className="mt-2 block text-center font-mono text-xs text-mute underline underline-offset-4 transition hover:text-chalk"
+          className="mt-2.5 block text-center text-xs font-medium text-mute underline underline-offset-4 transition hover:text-chalk"
         >
-          Top up →
+          Top up — $3 covers the next 300 →
         </a>
+      ) : (
+        <p className="mt-2.5 text-center text-xs text-mute">
+          Leaves {viewerBalance - 1}¢ in your jar · refundable anytime
+        </p>
       )}
 
       {state.kind === "error" && (
-        <p className="mt-2 text-center font-mono text-xs text-love">
-          {state.message}
-        </p>
+        <p className="mt-2 text-center text-xs text-love">{state.message}</p>
       )}
     </div>
   );

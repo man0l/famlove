@@ -5,7 +5,7 @@ export const metadata: Metadata = { title: "Privacy" };
 export default function PrivacyPage() {
   return (
     <article className="mx-auto max-w-2xl px-4 py-12 text-sm leading-relaxed text-mute">
-      <h1 className="text-3xl font-semibold tracking-tight text-chalk">Privacy</h1>
+      <h1 className="display text-4xl text-chalk">Privacy</h1>
 
       <Section title="What we store">
         From X: your account id, handle, display name, avatar URL, account
@@ -42,9 +42,7 @@ export default function PrivacyPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mt-8">
-      <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-chalk">
-        {title}
-      </h2>
+      <h2 className="display text-xl text-chalk">{title}</h2>
       <p className="mt-2">{children}</p>
     </section>
   );
