@@ -69,6 +69,18 @@ export function stripe(): Stripe {
   if (!client) {
     client = new Stripe(process.env.STRIPE_SECRET_KEY!, {
       apiVersion: "2025-10-29.clover",
+      /*
+       * Force the fetch transport. Without this the SDK picks its HTTP client
+       * by sniffing the platform, and `nodejs_compat` makes a Cloudflare
+       * Worker look enough like Node that it selects `node:https` — which
+       * never completes there. The symptom is not an error: checkout simply
+       * hangs until the request times out, with the buyer watching a spinner.
+       *
+       * Stripe ships a `workerd` export condition for exactly this, but the
+       * Next build resolves `default`, so the node build is what gets
+       * bundled. Setting the client explicitly is correct on either.
+       */
+      httpClient: Stripe.createFetchHttpClient(),
     });
   }
   return client;
