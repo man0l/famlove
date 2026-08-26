@@ -262,6 +262,34 @@ npm run typecheck
 npm run build
 ```
 
+### Where it runs
+
+Live on **Cloudflare Workers** at [famlove.lol](https://famlove.lol), via
+`@opennextjs/cloudflare` (the Workers adapter, Node.js runtime — not the older
+edge-only Pages one).
+
+```bash
+npm run cf:build     # opennextjs-cloudflare build
+npm run cf:deploy    # build + wrangler deploy
+npm run cf:preview   # build + wrangler dev
+```
+
+Three things differ from a Vercel deployment, all handled:
+
+- **`worker.ts` wraps the generated worker.** Cron Triggers invoke a
+  `scheduled()` export rather than sending an HTTP request, and OpenNext only
+  generates a `fetch` handler — so the 00:05 UTC rollup gets a handler to land
+  in, which calls the existing route over the worker's own public URL.
+  `vercel.json` is kept so the app still deploys to either host.
+- **`NEXT_PUBLIC_SITE_URL` is inlined at build time**, so it must be correct
+  when `opennextjs-cloudflare build` runs, not just at runtime.
+- **No incremental cache and no R2 bucket.** Every page is `force-dynamic` —
+  boards, walls and receipts are all "what is true right now" — so there is
+  nothing to cache and one less thing to keep in sync.
+
+`next/og` renders the share card fine under workerd (1200×630 PNG, ~1.2s),
+which was the part worth proving before committing to the host.
+
 ### Deploying, and taking real money
 
 ```bash
@@ -270,7 +298,10 @@ npm run golive https://your-domain --create-webhook   # + create the endpoint
 ```
 
 `golive` checks every way famlove can take somebody's money and give them
-nothing back, and exits non-zero until each one is closed: the site responds,
+nothing back, and exits non-zero until each one is closed. With Cloudflare
+credentials present it asks the deployed worker which secrets it actually
+holds, rather than reading a local `.env` and reporting on a live site —
+which is how a preflight lies to you in both directions. It checks: the site responds,
 `SESSION_SECRET` isn't a placeholder, X OAuth is configured and its redirect
 matches, both unique indexes exist, Stripe charges are enabled, Tax is active,
 and a webhook endpoint exists for **this** site with the events the code

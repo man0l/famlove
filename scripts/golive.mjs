@@ -56,17 +56,73 @@ if (!site) {
 
 /* ------------------------------------------------------------------ secrets */
 console.log("\nsecrets");
-const secret = process.env.SESSION_SECRET ?? "";
-if (secret.length < 32) fail("SESSION_SECRET too short", `${secret.length} chars, want 32+`);
-else if (/dev|change|test|secret123/i.test(secret)) fail("SESSION_SECRET looks like a placeholder");
-else pass("SESSION_SECRET");
+
+/*
+ * Where the secrets actually live depends on where this is deployed. Reading
+ * the local .env and reporting on a live site is how a preflight lies to you
+ * in both directions — a placeholder locally is not a placeholder in
+ * production, and a strong local value proves nothing about the deployment.
+ *
+ * With Cloudflare credentials present, ask the worker which secrets it holds.
+ * Values are never readable, which is correct; presence is what matters.
+ */
+const cfToken = process.env.CLOUDFLARE_API_TOKEN;
+const cfAccount = process.env.CLOUDFLARE_ACCOUNT_ID;
+let deployedSecrets = null;
+
+if (cfToken && cfAccount) {
+  const workerName = await (async () => {
+    try {
+      const raw = await (await import("node:fs/promises")).readFile("wrangler.jsonc", "utf8");
+      return raw.match(/"name"\s*:\s*"([^"]+)"/)?.[1] ?? null;
+    } catch {
+      return null;
+    }
+  })();
+
+  if (workerName) {
+    const res = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${cfAccount}/workers/scripts/${workerName}/secrets`,
+      { headers: { Authorization: `Bearer ${cfToken}` } },
+    );
+    const json = await res.json();
+    if (json.success) {
+      deployedSecrets = (json.result ?? []).map((x) => x.name);
+      pass(`reading secrets from the deployed worker "${workerName}"`, `${deployedSecrets.length} set`);
+    }
+  }
+}
+
+if (deployedSecrets) {
+  for (const name of ["DATABASE_URL", "SESSION_SECRET"]) {
+    if (deployedSecrets.includes(name)) pass(`${name} set on the worker`);
+    else fail(`${name} not set on the worker`, `wrangler secret put ${name}`);
+  }
+  if (deployedSecrets.includes("CRON_SECRET")) pass("CRON_SECRET set on the worker");
+  else warn("CRON_SECRET not set on the worker", "/api/cron/rollup is then open to anyone");
+  if (deployedSecrets.includes("STRIPE_SECRET_KEY")) pass("STRIPE_SECRET_KEY set on the worker");
+  else fail("STRIPE_SECRET_KEY not set on the worker", "no way to take money");
+  if (deployedSecrets.includes("STRIPE_WEBHOOK_SECRET")) pass("STRIPE_WEBHOOK_SECRET set on the worker");
+  else fail("STRIPE_WEBHOOK_SECRET not set on the worker", "checkout refuses to open, by design");
+  if (deployedSecrets.includes("X_CLIENT_ID") && deployedSecrets.includes("X_CLIENT_SECRET")) {
+    pass("X OAuth credentials set on the worker");
+  } else {
+    fail("X OAuth not set on the worker", "nobody can sign in, so nobody can pay");
+  }
+} else {
+  console.log("  · no deployment credentials — checking the local environment instead");
+  const secret = process.env.SESSION_SECRET ?? "";
+  if (secret.length < 32) fail("SESSION_SECRET too short", `${secret.length} chars, want 32+`);
+  else if (/dev|change|test|secret123/i.test(secret)) fail("SESSION_SECRET looks like a placeholder");
+  else pass("SESSION_SECRET");
+
+  if (process.env.CRON_SECRET) pass("CRON_SECRET set");
+  else warn("CRON_SECRET unset", "/api/cron/rollup is then open to anyone");
+}
 
 if (process.env.ALLOW_DEV_LOGIN === "1") {
-  warn("ALLOW_DEV_LOGIN=1 is set", "harmless in production — the route refuses — but remove it");
-} else pass("dev login disabled");
-
-if (process.env.CRON_SECRET) pass("CRON_SECRET set");
-else warn("CRON_SECRET unset", "/api/cron/rollup is then open to anyone");
+  warn("ALLOW_DEV_LOGIN=1 locally", "harmless in production — the route refuses — but never set it on a deployment");
+}
 
 /* ------------------------------------------------------------------- legal */
 console.log("\nlegal");
@@ -84,7 +140,9 @@ if (process.env.STRIPE_TOS_CONSENT === "1") {
 
 /* ----------------------------------------------------------------- identity */
 console.log("\nidentity (X OAuth)");
-if (!process.env.X_CLIENT_ID || !process.env.X_CLIENT_SECRET) {
+if (deployedSecrets) {
+  console.log("  · checked on the worker above");
+} else if (!process.env.X_CLIENT_ID || !process.env.X_CLIENT_SECRET) {
   fail("X OAuth not configured", "nobody can sign in, so nobody can pay");
 } else {
   pass("X client credentials present");
@@ -181,9 +239,11 @@ if (!key) {
   }
 
   /* ---- webhook ---- */
-  if (!process.env.STRIPE_WEBHOOK_SECRET) {
-    fail("STRIPE_WEBHOOK_SECRET unset", "checkout refuses to open on a live key, by design");
-  } else pass("webhook secret present");
+  if (!deployedSecrets) {
+    if (!process.env.STRIPE_WEBHOOK_SECRET) {
+      fail("STRIPE_WEBHOOK_SECRET unset", "checkout refuses to open on a live key, by design");
+    } else pass("webhook secret present");
+  }
 
   const hooks = await stripeGet("webhook_endpoints?limit=100");
   const wanted = site ? `${site}/api/webhooks/stripe` : null;

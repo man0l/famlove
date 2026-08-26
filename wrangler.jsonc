@@ -1,0 +1,38 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "famlove",
+  "main": "worker.ts",
+  "compatibility_date": "2026-08-01",
+  // nodejs_compat: the Stripe SDK and node:crypto in the Lemon Squeezy
+  // webhook both need it. global_fetch_strictly_public: lets the scheduled
+  // handler call the worker's own public URL for the nightly rollup.
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  // The 00:05 UTC rollup that writes streaks and sends the one email famlove
+  // has. On Vercel this lives in vercel.json; here it is a Cron Trigger.
+  "triggers": {
+    "crons": ["5 0 * * *"]
+  },
+  "observability": {
+    "enabled": true
+  },
+  // NEXT_PUBLIC_* is inlined by Next at build time, so this has to be right
+  // when `opennextjs-cloudflare build` runs — it is also read at runtime by
+  // the scheduled handler in worker.ts.
+  "vars": {
+    "NEXT_PUBLIC_SITE_URL": "https://famlove.lol"
+  },
+  // The real domain, not <account>.workers.dev. Wrangler creates the DNS
+  // record on the zone. workers.dev is off so the account-subdomain URL — and
+  // the account holder's name in it — does not exist as a second front door.
+  "routes": [
+    {
+      "pattern": "famlove.lol",
+      "custom_domain": true
+    }
+  ],
+  "workers_dev": false
+}
