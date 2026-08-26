@@ -100,6 +100,14 @@ export default async function WalletPage({
           only choosing how many times you get to do it.
         </p>
 
+        {payments === "test" && (
+          <p className="mt-4 rounded-2xl border border-butter/40 bg-butter/10 px-4 py-3 text-sm text-butter">
+            <strong>Sandbox.</strong> Checkout opens but no card is ever
+            charged — use 4242 4242 4242 4242. Cents granted here are not
+            bought and may be wiped.
+          </p>
+        )}
+
         {payments === "off" && (
           <p className="mt-4 rounded-2xl border border-line bg-ink-2 px-4 py-3 text-sm text-mute">
             Top-ups aren&apos;t switched on yet. Nothing here can take your

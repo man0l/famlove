@@ -194,13 +194,17 @@ if (!key) {
   fail("STRIPE_SECRET_KEY unset", "no way to take money");
 } else {
   pass(live ? "live key" : "test key", live ? "" : "no real money will move");
+  // In sandbox, an unactivated account and pending Tax are expected, not
+  // faults. Reporting them as blockers makes the tool cry wolf, and a
+  // preflight nobody believes is worse than no preflight.
+  const gate = live ? fail : warn;
 
   const account = await stripeGet("account");
   if (account.error) {
     fail("Stripe account unreadable", account.error.message);
   } else {
     if (account.charges_enabled) pass("charges enabled");
-    else fail("charges not enabled on this account");
+    else gate("charges not enabled on this account", live ? "" : "normal for a sandbox account");
 
     pass("merchant", `${account.business_profile?.name ?? "?"} (${account.country}, ${account.default_currency})`);
 
@@ -235,7 +239,12 @@ if (!key) {
     if (taxWanted) pass("checkout will calculate VAT", "prices are tax-inclusive");
     else warn("STRIPE_TAX=0 but Tax is active", "you are selling to EU consumers without collecting VAT");
   } else {
-    fail("Stripe Tax not active", `status=${tax.status} — selling digital goods into the EU without it is a filing problem`);
+    gate(
+      "Stripe Tax not active",
+      live
+        ? `status=${tax.status} — selling digital goods into the EU without it is a filing problem`
+        : `status=${tax.status} — sandbox accounts usually have no origin address; the live account has Tax active`,
+    );
   }
 
   /* ---- webhook ---- */
@@ -286,8 +295,12 @@ if (!key) {
 /* ------------------------------------------------------------------ verdict */
 console.log(`\n${failures} blocking, ${warnings} to look at.\n`);
 if (failures) {
-  console.log("NOT ready to take money.\n");
+  console.log(live ? "NOT ready to take money.\n" : "Sandbox not wired up correctly.\n");
   process.exit(1);
+}
+if (!live) {
+  console.log("Sandbox is wired up. This proves the plumbing, not the money.\n");
+  process.exit(0);
 }
 console.log(
   warnings

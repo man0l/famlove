@@ -23,13 +23,17 @@ export function stripeConfigured(): boolean {
 /**
  * Which of three worlds the top-up buttons are living in.
  *
- *   live  — a provider is configured; buying works.
+ *   live  — a provider is configured; buying works and money moves.
+ *   test  — a Stripe test key. Checkout opens, cards are never charged.
  *   local — no provider, but dev login is on, so jars are granted for free.
  *   off   — no provider on a real deployment. Buying must not be offered at
  *           all, because the checkout route will refuse it anyway and a
  *           button that goes nowhere is worse than no button.
  */
-export function paymentsMode(): "live" | "local" | "off" {
+export function paymentsMode(): "live" | "test" | "local" | "off" {
+  // famlove.lol is a public address. A test key behind buttons that look
+  // exactly like real ones invites someone to think they bought something.
+  if (stripeConfigured() && !stripeIsLive()) return "test";
   if (stripeConfigured() || lemonConfigured()) return "live";
   const devJars =
     process.env.ALLOW_DEV_LOGIN === "1" && process.env.NODE_ENV !== "production";
