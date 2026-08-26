@@ -1,0 +1,70 @@
+/** Constants that define the game. Changing any of these changes the product. */
+
+/** A cent is a cent. Never a bundle, never a multiplier, never a bonus tier. */
+export const LOVE_COST_CENTS = 1;
+
+/** One love per wallet, per project, per UTC day. Enforced by a unique index. */
+export const DAILY_CAP_PER_PROJECT = 1;
+
+/** Ceiling on generosity, so spray-bots can't farm the GIVERS board. */
+export const DAILY_GIVE_CEILING = 60;
+
+/** Rolling window every board ranks over. */
+export const BOARD_WINDOW_DAYS = 7;
+
+/** X accounts younger than this can't play. Two proofs: an aged account + a card. */
+export const MIN_X_ACCOUNT_AGE_DAYS = 30;
+export const MIN_X_POSTS = 1;
+
+/** Max one project per user in v1. Enforced by a UNIQUE on projects.owner_id. */
+export const MAX_PROJECTS_PER_USER = 1;
+
+export type TierId = "hook" | "default" | "patron";
+
+export type Tier = {
+  id: TierId;
+  label: string;
+  cents: number;
+  /** No bonus cents, ever: $30 buys 3000¢, not 3600¢. See README §money. */
+  grantedCents: number;
+  blurb: string;
+  featured?: boolean;
+};
+
+export const TIERS: Tier[] = [
+  {
+    id: "hook",
+    label: "Hook",
+    cents: 300,
+    grantedCents: 300,
+    blurb: "300 cents. 300 people you can show up for.",
+  },
+  {
+    id: "default",
+    label: "Default",
+    cents: 1000,
+    grantedCents: 1000,
+    blurb: "1,000 cents. Most people never spend it all.",
+    featured: true,
+  },
+  {
+    id: "patron",
+    label: "Patron",
+    cents: 3000,
+    grantedCents: 3000,
+    blurb: "3,000 cents. You are going to top the GIVERS board.",
+  },
+];
+
+export const tierById = (id: string): Tier | undefined =>
+  TIERS.find((t) => t.id === id);
+
+export const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "http://localhost:3000");
+
+export const RALLY_HOURS = 24;
+export const RALLY_MIN_GOAL = 5;
+export const RALLY_MAX_GOAL = 500;
