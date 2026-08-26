@@ -132,33 +132,42 @@ export function GiveButton({
     })();
   };
 
+  /*
+   * An empty jar used to render a disabled grey button reading "Your jar is
+   * empty", with the only way forward as a small underlined link beneath it.
+   * That puts a dead control where the primary action belongs and hides the
+   * live one. When there is nothing to spend, topping up *is* the action.
+   */
+  if (viewerBalance < 1) {
+    return (
+      <div>
+        <a
+          href="/wallet"
+          className="btn-love block w-full px-5 py-4 text-center text-base font-semibold"
+        >
+          Get cents to show up →
+        </a>
+        <p className="mt-2.5 text-center text-xs text-mute">
+          Your jar is empty. $3 covers the next 300 people.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div>
       <button
         type="button"
         onClick={send}
-        disabled={state.kind === "sending" || viewerBalance < 1}
+        disabled={state.kind === "sending"}
         className="btn-love pulse-love w-full px-5 py-4 text-base font-semibold"
       >
-        {state.kind === "sending"
-          ? "…"
-          : viewerBalance < 1
-            ? "Your jar is empty"
-            : "Show up for this · 1¢ ♥"}
+        {state.kind === "sending" ? "…" : "Show up for this · 1¢ ♥"}
       </button>
 
-      {viewerBalance < 1 ? (
-        <a
-          href="/wallet"
-          className="mt-2.5 block text-center text-xs font-medium text-mute underline underline-offset-4 transition hover:text-chalk"
-        >
-          Top up — $3 covers the next 300 →
-        </a>
-      ) : (
-        <p className="mt-2.5 text-center text-xs text-mute">
-          Leaves {viewerBalance - 1}¢ in your jar · refundable anytime
-        </p>
-      )}
+      <p className="mt-2.5 text-center text-xs text-mute">
+        Leaves {viewerBalance - 1}¢ in your jar · refundable anytime
+      </p>
 
       {state.kind === "error" && (
         <p className="mt-2 text-center text-xs text-love">{state.message}</p>

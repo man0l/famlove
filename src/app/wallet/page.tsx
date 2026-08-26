@@ -127,10 +127,10 @@ export default async function WalletPage({
               <button
                 type="submit"
                 disabled={payments === "off"}
-                className={`card card-hover flex h-full w-full flex-col p-5 text-left ${
+                className={`card card-hover flex h-full w-full cursor-pointer flex-col p-5 text-left ${
                   tier.featured
                     ? "border-love/60 bg-love/8 hover:border-love"
-                    : ""
+                    : "hover:border-love/50"
                 }`}
               >
                 {/* A fixed-height slot so all three prices share a baseline,
@@ -153,8 +153,24 @@ export default async function WalletPage({
                 <span className="mt-1 block text-sm font-medium text-chalk">
                   {tier.grantedCents.toLocaleString()} people
                 </span>
-                <span className="mt-auto pt-2 block text-xs text-mute">
+                <span className="mt-1 block text-xs text-mute">
                   1¢ each. No fee on any of them.
+                </span>
+
+                {/*
+                  These cards were the buy buttons, and nothing said so — same
+                  rounded panel as the balance tiles directly above, no verb,
+                  no arrow. People read them as information and looked for a
+                  button that did not exist. The action needs to look like one.
+                */}
+                <span
+                  className={`mt-4 block w-full rounded-full px-4 py-2.5 text-center text-sm font-semibold transition ${
+                    tier.featured
+                      ? "bg-love text-white"
+                      : "border border-line-2 text-chalk group-hover:border-love"
+                  }`}
+                >
+                  Get {tier.grantedCents.toLocaleString()} cents →
                 </span>
               </button>
             </form>
