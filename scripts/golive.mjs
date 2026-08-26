@@ -68,6 +68,34 @@ if (process.env.ALLOW_DEV_LOGIN === "1") {
 if (process.env.CRON_SECRET) pass("CRON_SECRET set");
 else warn("CRON_SECRET unset", "/api/cron/rollup is then open to anyone");
 
+/* ------------------------------------------------------------------- legal */
+console.log("\nlegal");
+const trader = {
+  LEGAL_ENTITY: process.env.LEGAL_ENTITY,
+  LEGAL_COMPANY_NUMBER: process.env.LEGAL_COMPANY_NUMBER,
+  LEGAL_ADDRESS: process.env.LEGAL_ADDRESS,
+};
+const missingTrader = Object.entries(trader).filter(([, v]) => !v).map(([k]) => k);
+if (missingTrader.length) {
+  // Selling to EU consumers without naming the trader on the page is not a
+  // style problem — the identification is required before the sale.
+  fail("trader not identified", `set ${missingTrader.join(", ")} — /legal/terms names the seller`);
+} else {
+  pass("trader identified", `${trader.LEGAL_ENTITY}, ${trader.LEGAL_ADDRESS}`);
+}
+if (process.env.LEGAL_VAT_NUMBER) pass("VAT number published");
+else warn("LEGAL_VAT_NUMBER unset", "publish it if the company is VAT-registered");
+if (process.env.LEGAL_EMAIL) pass("contact address", process.env.LEGAL_EMAIL);
+else warn("LEGAL_EMAIL unset", "terms and privacy fall back to hello@famlove.lol");
+if (process.env.STRIPE_TOS_CONSENT === "1") {
+  pass("checkout collects terms acceptance", "needs the Terms URL set in Stripe → Settings → Checkout");
+} else {
+  warn(
+    "STRIPE_TOS_CONSENT unset",
+    "checkout shows the immediate-supply notice but no tick-box; set the Terms URL in Stripe, then set this to 1",
+  );
+}
+
 /* ----------------------------------------------------------------- identity */
 console.log("\nidentity (X OAuth)");
 if (!process.env.X_CLIENT_ID || !process.env.X_CLIENT_SECRET) {

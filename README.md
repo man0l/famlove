@@ -345,12 +345,15 @@ result that is actually a success.
 - **Chargebacks are asymmetric.** A $15 dispute fee on a $3 jar is a 5× loss.
 - **The window closes fast.** The rebuttal frame is the only free distribution
   there is, and it has a shelf life measured in days.
-- **Prepaid balances have a legal shape.** Closed-loop, single-issuer,
-  non-redeemable credit is the mildest version of stored value and is normally
-  fine — but it is a real category with real EU e-money edges. Get thirty
-  minutes with a lawyer on the ToS wording before taking the first payment.
-  Nothing in this repo is legal advice; `src/app/legal/terms/page.tsx` is
-  marked precisely because that is where advice is needed.
+- **Prepaid balances have a legal shape.** Cents are closed-loop,
+  single-issuer, non-transferable credit redeemable against exactly one feature
+  on one site, and refunded in cash while unspent — the mildest form of stored
+  value there is, and deliberately so. `/legal/terms` §5 states what a cent is
+  not (not e-money, not a payment instrument, not a voucher, not transferable),
+  §7 handles the EU right of withdrawal over digital content supplied
+  immediately, and checkout collects that consent rather than assuming it.
+  `npm run golive` refuses to pass until the selling entity is named on the
+  page, because a trader has to identify itself before the sale.
 
 ---
 

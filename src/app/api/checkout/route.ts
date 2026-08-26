@@ -110,6 +110,35 @@ export async function POST(request: NextRequest) {
       granted_cents: String(tier.grantedCents),
     },
     automatic_tax: { enabled: taxEnabled },
+    /*
+     * Terms §7 says the buyer agrees at checkout that supply begins
+     * immediately and that they lose the statutory 14-day withdrawal right
+     * over cents they then spend. That has to actually be asked, or the
+     * sentence is decoration — so it is asked here, on the payment page,
+     * where consent to immediate supply legally has to be given.
+     *
+     * The tick-box form needs a Terms URL set in the Stripe dashboard
+     * (Settings → Checkout), hence the flag; the written notice below always
+     * shows either way.
+     */
+    ...(process.env.STRIPE_TOS_CONSENT === "1"
+      ? { consent_collection: { terms_of_service: "required" as const } }
+      : {}),
+    custom_text: {
+      submit: {
+        message:
+          "Your cents arrive immediately, so you agree supply starts now and " +
+          "that you give up the 14-day right to withdraw from any cent you " +
+          "spend. Unspent cents are refunded in full, anytime, no questions.",
+      },
+      ...(process.env.STRIPE_TOS_CONSENT === "1"
+        ? {
+            terms_of_service_acceptance: {
+              message: `I agree to the [Terms of Service](${SITE_URL}/legal/terms).`,
+            },
+          }
+        : {}),
+    },
     // Stripe Tax needs somewhere to tax; Checkout collects it for us.
     billing_address_collection: taxEnabled ? "required" : "auto",
     customer_creation: "if_required",
