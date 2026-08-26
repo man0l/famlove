@@ -12,7 +12,8 @@
     "db:reset": "node scripts/db.mjs reset",
     "db:status": "node scripts/db.mjs status",
     "rules": "node scripts/rules-check.mjs",
-    "assets": "node scripts/generate-assets.mjs"
+    "assets": "node scripts/generate-assets.mjs",
+    "golive": "node scripts/golive.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",

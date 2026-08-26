@@ -6,7 +6,7 @@ import { givenToday } from "@/lib/queries";
 import { sql } from "@/lib/db";
 import { DAILY_GIVE_CEILING, TIERS } from "@/lib/config";
 import { formatCents, isoDay } from "@/lib/time";
-import { stripeConfigured } from "@/lib/payments";
+import { reconcileCheckoutSession, stripeConfigured } from "@/lib/payments";
 import { Sticker } from "@/components/Sticker";
 import { TrustRow } from "@/components/TrustRow";
 
@@ -18,9 +18,24 @@ export default async function WalletPage({
 }: {
   searchParams: Promise<Record<string, string>>;
 }) {
-  const user = await currentUser();
+  let user = await currentUser();
   if (!user) redirect("/join");
   const query = await searchParams;
+
+  /*
+   * If they just came back from Checkout, settle up before rendering. The
+   * webhook is usually first, in which case this is a no-op — but when it
+   * isn't, this is the difference between "your cents are here" and a buyer
+   * staring at an empty jar they just paid for.
+   */
+  let lateCredit = 0;
+  if (query.session_id) {
+    const settled = await reconcileCheckoutSession(query.session_id, user.id);
+    if (settled.credited > 0) {
+      lateCredit = settled.credited;
+      user = (await currentUser()) ?? user;
+    }
+  }
 
   const given = await givenToday(user.id);
   const topups = (await sql`
@@ -46,7 +61,9 @@ export default async function WalletPage({
 
       {query.topped_up && (
         <Flash tone="love">
-          Jar topped up. Go put your face on somebody&apos;s wall.
+          {lateCredit > 0
+            ? `${lateCredit} cents landed. Go put your face on somebody's wall.`
+            : "Jar topped up. Go put your face on somebody's wall."}
         </Flash>
       )}
       {query.refunded && Number(query.refunded) > 0 && (

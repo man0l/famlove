@@ -262,15 +262,39 @@ npm run typecheck
 npm run build
 ```
 
-### Deploying
+### Deploying, and taking real money
 
-1. Push to a Vercel project. Set every variable from `.env.example`.
-2. Point the Stripe webhook at `/api/webhooks/stripe`
-   (`checkout.session.completed`, `charge.refunded`), or the Lemon Squeezy one
-   at `/api/webhooks/lemonsqueezy` (`order_created`).
-3. `vercel.json` already registers the 00:05 UTC rollup cron.
-4. Set a recognisable statement descriptor in Stripe. It is the cheapest
-   dispute defence there is.
+```bash
+npm run golive https://your-domain                    # preflight, read-only
+npm run golive https://your-domain --create-webhook   # + create the endpoint
+```
+
+`golive` checks every way famlove can take somebody's money and give them
+nothing back, and exits non-zero until each one is closed: the site responds,
+`SESSION_SECRET` isn't a placeholder, X OAuth is configured and its redirect
+matches, both unique indexes exist, Stripe charges are enabled, Tax is active,
+and a webhook endpoint exists for **this** site with the events the code
+listens for. It never creates a charge; `--create-webhook` is the only call
+that writes to Stripe.
+
+Three things the live path does that the test path doesn't:
+
+1. **Checkout refuses to open on a live key with no `STRIPE_WEBHOOK_SECRET`.**
+   The webhook is what credits the jar. A missed sale is recoverable; charging
+   a card and crediting nothing is not.
+2. **Prices go to Stripe tax-inclusive.** With exclusive tax an EU buyer is
+   asked for $3.63 and "$3 buys 300 cents" stops being true. Inclusive keeps
+   the sticker price the price and takes VAT out of the margin — which is how
+   §money models it.
+3. **The success page reconciles.** `success_url` carries the session id, and
+   `/wallet` verifies it against Stripe and credits the jar if the webhook
+   hasn't yet. Both paths insert into `topups`, which is UNIQUE on
+   `(provider, provider_ref)`, so the second one is a no-op. A misconfigured
+   webhook costs you a log line instead of a buyer.
+
+Then set a **famlove-specific statement descriptor** in Stripe. It is the
+cheapest dispute defence there is, and on a $3 jar a $15 dispute fee is a 5×
+loss.
 
 ---
 

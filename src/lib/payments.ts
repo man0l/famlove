@@ -20,6 +20,24 @@ export function stripeConfigured(): boolean {
   return Boolean(process.env.STRIPE_SECRET_KEY);
 }
 
+export function stripeIsLive(): boolean {
+  return /^(sk|rk)_live_/.test(process.env.STRIPE_SECRET_KEY ?? "");
+}
+
+/**
+ * Refuse to sell what we cannot deliver.
+ *
+ * A jar is credited by the `checkout.session.completed` webhook. With a live
+ * key and no webhook secret, a card is charged and the cents never arrive —
+ * the buyer is simply out of pocket. A missed sale is recoverable; taking
+ * someone's $3 and giving them nothing is not. So checkout refuses to open.
+ */
+export function liveConfigError(): string | null {
+  if (!stripeIsLive()) return null;
+  if (!process.env.STRIPE_WEBHOOK_SECRET) return "missing_webhook_secret";
+  return null;
+}
+
 export function lemonConfigured(): boolean {
   return Boolean(
     process.env.LEMONSQUEEZY_API_KEY && process.env.LEMONSQUEEZY_STORE_ID,
@@ -201,4 +219,83 @@ export async function refundUnspent(
   `;
 
   return { refundedCents: refunded, refunds: refs };
+}
+
+
+/**
+ * Belt and braces on the return leg.
+ *
+ * The webhook is the primary credit path, but webhooks get misconfigured,
+ * retried late, or blocked — and the failure mode is a buyer staring at an
+ * empty jar they just paid for. So when someone lands back on /wallet with a
+ * session id, verify it directly and credit it if nothing has yet.
+ *
+ * This cannot double-credit: both paths insert into `topups`, which is UNIQUE
+ * on (provider, provider_ref), so whichever arrives second is a no-op.
+ */
+export async function reconcileCheckoutSession(
+  sessionId: string,
+  userId: number,
+): Promise<{ credited: number; balance: number | null; note?: string }> {
+  if (!stripeConfigured() || !sessionId.startsWith("cs_")) {
+    return { credited: 0, balance: null };
+  }
+
+  let session: Stripe.Checkout.Session;
+  try {
+    session = await stripe().checkout.sessions.retrieve(sessionId);
+  } catch {
+    return { credited: 0, balance: null, note: "unknown_session" };
+  }
+
+  if (session.payment_status !== "paid") {
+    return { credited: 0, balance: null, note: session.payment_status };
+  }
+
+  // Only ever credit the account that started the session.
+  const owner = Number(session.metadata?.user_id ?? session.client_reference_id);
+  if (!owner || owner !== userId) {
+    return { credited: 0, balance: null, note: "not_yours" };
+  }
+
+  const granted = Number(session.metadata?.granted_cents ?? 0);
+  if (!granted) return { credited: 0, balance: null, note: "no_grant" };
+
+  let card: Parameters<typeof creditWallet>[0]["card"] = null;
+  let feeCents = 0;
+
+  if (session.payment_intent) {
+    const intent = await stripe().paymentIntents.retrieve(
+      String(session.payment_intent),
+      { expand: ["latest_charge.balance_transaction"] },
+    );
+    const charge = intent.latest_charge as Stripe.Charge | null;
+    const details = charge?.payment_method_details?.card;
+    if (details?.fingerprint) {
+      card = {
+        fingerprint: details.fingerprint,
+        brand: details.brand ?? null,
+        last4: details.last4 ?? null,
+        funding: details.funding ?? null,
+        country: details.country ?? null,
+      };
+    }
+    const balanceTx = charge?.balance_transaction;
+    if (balanceTx && typeof balanceTx !== "string") feeCents = balanceTx.fee;
+  }
+
+  const result = await creditWallet({
+    userId,
+    provider: "stripe",
+    providerRef: session.id,
+    tier: String(session.metadata?.tier ?? "unknown"),
+    grossCents: session.amount_total ?? 0,
+    feeCents,
+    taxCents: session.total_details?.amount_tax ?? 0,
+    grantedCents: granted,
+    card,
+  });
+
+  if (!result.ok) return { credited: 0, balance: null, note: result.error };
+  return { credited: result.credited, balance: result.balance };
 }
