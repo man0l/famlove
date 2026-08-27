@@ -163,6 +163,7 @@ export default async function ProjectPage({ params, searchParams }: Params) {
             signedIn={Boolean(user)}
             rank={page.rank}
             projectUrl={`${SITE_URL}/p/${slug}`}
+            autoLoves={page.viewerAutoLoves}
           />
 
           {rally && (

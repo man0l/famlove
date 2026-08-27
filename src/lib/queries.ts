@@ -265,6 +265,7 @@ export type Rally = {
 };
 
 export type ProjectPage = {
+  viewerAutoLoves: boolean;
   project: Project;
   rank: number | null;
   backersToday: number;
@@ -342,7 +343,11 @@ export async function projectPage(
         WHERE project_id = ${project.id}
           AND from_user_id = ${viewerId ?? 0}
           AND day_utc = (now() AT TIME ZONE 'utc')::date
-      ) AS viewer_loved_today
+      ) AS viewer_loved_today,
+      EXISTS (
+        SELECT 1 FROM auto_loves
+        WHERE project_id = ${project.id} AND user_id = ${viewerId ?? 0}
+      ) AS viewer_auto
   `) as Record<string, unknown>[];
 
   const wallToday = (await sql`
@@ -375,6 +380,7 @@ export async function projectPage(
     backersAllTime: Number(stats?.backers_all ?? 0),
     streakDays: Number(stats?.streak_days ?? 0),
     viewerLovedToday: Boolean(stats?.viewer_loved_today),
+    viewerAutoLoves: Boolean(stats?.viewer_auto),
     wallToday: wallToday
       .map((r) => ({
         handle: String(r.handle),

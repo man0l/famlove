@@ -218,6 +218,39 @@ with PKCE · `next/og` for share cards · Upstash for courtesy rate limits ·
 Resend for the one email. No ORM: the schema is one file of SQL and the boards
 are three SELECTs.
 
+### Standing orders, daily rallies, and the three emails
+
+A cent stays a deliberate act by default. A **standing order** is opt-in, per
+project, and offered on the receipt right after the first one: one cent a day,
+automatically, until the jar runs out. Every rule still applies — one per
+project per UTC day, the 60-a-day ceiling, a balance that covers it — so rank
+remains unbuyable. What changes is what a face means, which is why
+`loves.auto` records whether a cent was placed by a person or by their
+standing order. That distinction is not recoverable later if it isn't kept now.
+
+**Rallies open themselves** at 00:00 UTC rather than waiting for an owner to
+remember, for every project with a pulse in the last week — sixty rallies
+reading 0/50 would make the board look abandoned rather than busy. The goal is
+that project's own best day plus a fifth: always a stretch, never an insult.
+
+famlove sends **three** emails and no others:
+
+| Email | When | Guard |
+| --- | --- | --- |
+| `showed-up` | somebody backs your project | at most **once per project per day**, on the first cent |
+| `owner-digest` | 00:05 UTC | who showed up, the streak, the rank |
+| `supporter-digest` | 00:05 UTC | how the projects *you* back did, and how many days of jar you have left |
+
+The first is deliberately not one-per-backer: a project having a good day
+would otherwise mean a hundred emails, which is how a sending domain gets
+classed as spam and how a person learns to filter you.
+
+Every send is claimed in `email_sends` before it goes out, so a cron that
+retries doesn't mean two copies in an inbox — and the claim is **released
+again if the send fails**, since a claim is a lock, not a record of delivery.
+Nobody receives anything without typing an address in: X OAuth hands us none,
+so silence is the default.
+
 ### Schema
 
 | Table | Columns that matter | Note |

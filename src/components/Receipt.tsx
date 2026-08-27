@@ -2,6 +2,7 @@ import { formatCents } from "@/lib/time";
 import { DAILY_CAP_PER_PROJECT, DAILY_GIVE_CEILING } from "@/lib/config";
 import { Confetti } from "./Confetti";
 import { XIcon } from "./XIcon";
+import { AutoLoveToggle } from "./AutoLoveToggle";
 
 /**
  * "RECEIPT · NOT A DONATION" is not a joke line — it's the product's legal
@@ -18,6 +19,8 @@ export function Receipt({
   rank,
   previousRank,
   projectUrl,
+  slug,
+  autoLoves,
 }: {
   projectName: string;
   ownerHandle: string;
@@ -28,6 +31,8 @@ export function Receipt({
   rank: number | null;
   previousRank: number | null;
   projectUrl: string;
+  slug: string;
+  autoLoves: boolean;
 }) {
   const moved = rank !== null && previousRank !== null && rank !== previousRank;
 
@@ -105,6 +110,15 @@ export function Receipt({
         Your cent does not reach them. It buys your face on their wall.
         That is the entire product.
       </p>
+
+      <div className="mt-4">
+        <AutoLoveToggle
+          slug={slug}
+          projectName={projectName}
+          initial={autoLoves}
+          centsLeft={balance}
+        />
+      </div>
 
       <a
         href={`https://x.com/intent/post?text=${shareText}`}

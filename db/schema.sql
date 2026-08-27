@@ -120,3 +120,39 @@ CREATE TABLE IF NOT EXISTS daily_rollups (
   emailed_at      TIMESTAMPTZ,
   PRIMARY KEY (project_id, day_utc)
 );
+
+-- ---------------------------------------------------------------------------
+-- Standing orders, daily rallies, and the emails that hang off them.
+-- ---------------------------------------------------------------------------
+
+-- Was a cent placed by a person, or by their standing order? The cap is
+-- unaffected either way — one per project per day, still — but a wall of
+-- faces means something different when some of them are automatic, and that
+-- distinction is not recoverable later if it isn't recorded now.
+ALTER TABLE loves ADD COLUMN IF NOT EXISTS auto BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- "Keep showing up for this one until my cents run out."
+CREATE TABLE IF NOT EXISTS auto_loves (
+  user_id     BIGINT      NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  project_id  BIGINT      NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, project_id)
+);
+
+-- Rallies became a daily event rather than a weekly one the owner remembers
+-- to start, so the uniqueness that guards them moves from week to day.
+DROP INDEX IF EXISTS one_rally_per_week;
+CREATE UNIQUE INDEX IF NOT EXISTS one_rally_per_day
+  ON rallies (project_id, (date_trunc('day', starts_at AT TIME ZONE 'utc')));
+
+-- Email is the one thing here that cannot be un-sent, so every send is
+-- claimed in the database first. A cron that retries — or runs twice — must
+-- not mean two copies in somebody's inbox.
+CREATE TABLE IF NOT EXISTS email_sends (
+  user_id  BIGINT      NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  kind     TEXT        NOT NULL,
+  day_utc  DATE        NOT NULL,
+  ref      TEXT        NOT NULL DEFAULT '',
+  sent_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, kind, day_utc, ref)
+);

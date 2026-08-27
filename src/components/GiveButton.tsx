@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Receipt } from "./Receipt";
+import { AutoLoveToggle } from "./AutoLoveToggle";
 
 type State =
   | { kind: "idle" }
@@ -33,6 +34,7 @@ export function GiveButton({
   signedIn,
   rank,
   projectUrl,
+  autoLoves,
 }: {
   slug: string;
   projectName: string;
@@ -44,6 +46,7 @@ export function GiveButton({
   signedIn: boolean;
   rank: number | null;
   projectUrl: string;
+  autoLoves: boolean;
 }) {
   const router = useRouter();
   const [state, setState] = useState<State>({ kind: "idle" });
@@ -87,18 +90,31 @@ export function GiveButton({
         rank={state.rank}
         previousRank={state.previousRank}
         projectUrl={projectUrl}
+        slug={slug}
+        autoLoves={autoLoves}
       />
     );
   }
 
   if (lovedToday) {
     return (
-      <div className="rounded-[26px] border border-love/40 bg-love/10 px-5 py-5 text-center">
-        <p className="display text-lg text-love">You showed up today ♥</p>
-        <p className="mt-1.5 text-sm text-mute">
-          That&apos;s your one. Resets at 00:00 UTC — and no, you can&apos;t
-          buy another.
-        </p>
+      <div>
+        <div className="rounded-[26px] border border-love/40 bg-love/10 px-5 py-5 text-center">
+          <p className="display text-lg text-love">You showed up today ♥</p>
+          <p className="mt-1.5 text-sm text-mute">
+            That&apos;s your one. Resets at 00:00 UTC — and no, you can&apos;t
+            buy another.
+          </p>
+        </div>
+        <div className="mt-3">
+          <AutoLoveToggle
+            slug={slug}
+            projectName={projectName}
+            initial={autoLoves}
+            centsLeft={viewerBalance}
+            compact
+          />
+        </div>
       </div>
     );
   }
