@@ -102,8 +102,8 @@ async function Header() {
                 </form>
               </>
             ) : (
-              <Link href="/join" className="btn-love px-4 py-2 text-sm font-semibold">
-                Get cents
+              <Link href="/new" className="btn-love px-4 py-2 text-sm font-semibold">
+                List a project
               </Link>
             )}
           </div>

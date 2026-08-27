@@ -19,7 +19,7 @@ export default async function WalletPage({
   searchParams: Promise<Record<string, string>>;
 }) {
   let user = await currentUser();
-  if (!user) redirect("/join");
+  if (!user) redirect("/join?next=%2Fwallet");
   const query = await searchParams;
 
   /*

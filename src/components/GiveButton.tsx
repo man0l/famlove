@@ -56,7 +56,7 @@ export function GiveButton({
     return (
       <div>
         <a
-          href="/join"
+          href={`/join?next=${encodeURIComponent(`/p/${slug}`)}`}
           className="btn-love block w-full px-5 py-4 text-center font-semibold"
         >
           Show up for this · 1¢

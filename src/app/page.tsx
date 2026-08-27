@@ -80,7 +80,7 @@ export default async function HomePage() {
                 </Link>
               )}
               <Link
-                href={user ? "/wallet" : "/join"}
+                href={user ? "/wallet" : "/join?next=%2Fwallet"}
                 className="rounded-full border border-line px-5 py-3.5 font-medium text-mute transition hover:border-line-2 hover:text-chalk"
               >
                 {user
