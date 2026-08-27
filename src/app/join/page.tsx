@@ -61,6 +61,11 @@ export default async function JoinPage({
               : query.error === "cancelled"
                 ? "No problem — nothing happened."
                 : "That sign-in didn't complete. Try again."}
+          {query.error === "x_failed" && query.why && query.why !== "unknown" && (
+            <span className="mt-1 block text-xs text-mute/70">
+              ({query.why.replace(/_/g, " ")})
+            </span>
+          )}
         </p>
       )}
 

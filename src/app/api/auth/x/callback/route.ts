@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import { exchangeCode, fetchProfile, gateProfile } from "@/lib/x-oauth";
+import { exchangeCode, fetchProfile, gateProfile, XAuthError } from "@/lib/x-oauth";
 import { upsertUser } from "@/lib/users";
 import { createSession } from "@/lib/session";
 import { SITE_URL } from "@/lib/config";
@@ -72,7 +72,14 @@ export async function GET(request: NextRequest) {
       );
     }
     return NextResponse.redirect(`${SITE_URL}${destination}`);
-  } catch {
-    return back("error=x_failed");
+  } catch (err) {
+    // Surface X's own reason (redirect_uri_mismatch, invalid_client, …) so a
+    // failed sign-in can be diagnosed. Whitelisted characters only — the value
+    // comes from X but is echoed into a URL.
+    const why =
+      err instanceof XAuthError
+        ? err.code.replace(/[^a-z0-9_]/gi, "").slice(0, 40)
+        : "unknown";
+    return back(`error=x_failed&why=${why}`);
   }
 }

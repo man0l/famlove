@@ -54,6 +54,13 @@ export function authorizeUrl(state: string, challenge: string): string {
   return `${AUTHORIZE}?${params.toString()}`;
 }
 
+export class XAuthError extends Error {
+  constructor(public code: string) {
+    super(`X auth failed: ${code}`);
+    this.name = "XAuthError";
+  }
+}
+
 export type XProfile = {
   id: string;
   username: string;
@@ -86,10 +93,26 @@ export async function exchangeCode(
   });
 
   if (!res.ok) {
-    throw new Error(`X token exchange failed: ${res.status} ${await res.text()}`);
+    /*
+     * X's token error is structured — { error, error_description } — and its
+     * `error` value is the one thing that says *why* a real login failed:
+     * "invalid_client" (wrong id/secret), "redirect_uri_mismatch" (the
+     * callback URL is not on the app's allow-list), "invalid_grant" (a stale
+     * or reused code). The callback surfaces this string so a failed sign-in
+     * is diagnosable rather than a blanket "x_failed". It carries no secret —
+     * it is X describing its own rejection.
+     */
+    let code = String(res.status);
+    try {
+      const body = (await res.json()) as { error?: string };
+      if (body.error) code = body.error;
+    } catch {
+      /* non-JSON body; the status code stands */
+    }
+    throw new XAuthError(code);
   }
   const json = (await res.json()) as { access_token?: string };
-  if (!json.access_token) throw new Error("X token exchange returned no token.");
+  if (!json.access_token) throw new XAuthError("no_token");
   return json.access_token;
 }
 
