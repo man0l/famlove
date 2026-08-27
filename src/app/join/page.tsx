@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { currentUser } from "@/lib/session";
 import { xConfigured } from "@/lib/x-oauth";
-import { MIN_X_ACCOUNT_AGE_DAYS, TIERS } from "@/lib/config";
+import { FEATURED_TIER, MIN_X_ACCOUNT_AGE_DAYS, TIERS } from "@/lib/config";
 import { formatCents } from "@/lib/time";
 import { Sticker } from "@/components/Sticker";
 import { TrustRow } from "@/components/TrustRow";
@@ -21,7 +21,7 @@ export default async function JoinPage({
   const query = await searchParams;
   const devLogin =
     process.env.ALLOW_DEV_LOGIN === "1" && process.env.NODE_ENV !== "production";
-  const anchor = TIERS[1];
+  const anchor = FEATURED_TIER;
   const next =
     typeof query.next === "string" && /^\/[a-zA-Z0-9/_-]*$/.test(query.next)
       ? query.next

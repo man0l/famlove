@@ -4,7 +4,7 @@ import { Sticker } from "@/components/Sticker";
 import { lovedBoard, siteStats } from "@/lib/queries";
 import { currentUser } from "@/lib/session";
 import { sql } from "@/lib/db";
-import { TIERS } from "@/lib/config";
+import { ENTRY_TIER } from "@/lib/config";
 import { formatCents } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +16,10 @@ export default async function HomePage() {
     currentUser(),
   ]);
 
-  const anchor = TIERS[1];
+  // The secondary CTA quotes the entry price, not the recommended one: it is
+  // an aside next to "list your project", and $3 is a smaller thing to weigh
+  // up mid-thought than $10.
+  const anchor = ENTRY_TIER;
 
   // Does the visitor already have a wall of their own? Decides whether the
   // hero asks them to list, or shows them the thing they came back to see.

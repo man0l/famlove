@@ -59,6 +59,13 @@ export const TIERS: Tier[] = [
 export const tierById = (id: string): Tier | undefined =>
   TIERS.find((t) => t.id === id);
 
+/** The cheapest way in. Use where the ask should feel small. */
+export const ENTRY_TIER: Tier = TIERS[0];
+
+/** The one most people pick. Use where we are recommending, not asking. */
+export const FEATURED_TIER: Tier =
+  TIERS.find((t) => t.featured) ?? TIERS[1];
+
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
   (process.env.VERCEL_PROJECT_PRODUCTION_URL
