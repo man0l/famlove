@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FaceRow } from "./Face";
+import { ProjectMark } from "./ProjectMark";
 import type { BoardEntry } from "@/lib/queries";
 
 export function BoardRow({
@@ -28,6 +29,8 @@ export function BoardRow({
         >
           {entry.rank}
         </span>
+
+        <ProjectMark favicon={entry.faviconUrl} name={entry.name} size={32} />
 
         <span className="min-w-0 flex-1">
           <span className="flex items-baseline gap-2">

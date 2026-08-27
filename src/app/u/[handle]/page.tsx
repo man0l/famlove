@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Face } from "@/components/Face";
 import { profilePage } from "@/lib/queries";
 import { currentUser } from "@/lib/session";
+import { ProjectMark } from "@/components/ProjectMark";
 import { Sticker } from "@/components/Sticker";
 
 export const dynamic = "force-dynamic";
@@ -80,9 +81,14 @@ export default async function ProfilePage({ params }: Params) {
               <li key={project.slug}>
                 <Link
                   href={`/p/${project.slug}`}
-                  className="flex items-baseline justify-between gap-4 transition hover:text-love"
+                  className="flex items-center justify-between gap-4 transition hover:text-love"
                 >
-                  <span className="min-w-0">
+                  <ProjectMark
+                    favicon={project.faviconUrl}
+                    name={project.name}
+                    size={34}
+                  />
+                  <span className="min-w-0 flex-1">
                     <span className="display block text-xl">{project.name}</span>
                     <span className="block truncate text-sm text-mute">
                       {project.tagline}

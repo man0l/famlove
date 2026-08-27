@@ -173,3 +173,15 @@ CREATE INDEX IF NOT EXISTS projects_owner ON projects (owner_id) WHERE removed_a
 -- asked once rather than every time somebody signs in — an ask that repeats
 -- is a nag, and a nag is how people learn to distrust a product.
 ALTER TABLE users ADD COLUMN IF NOT EXISTS email_declined_at TIMESTAMPTZ;
+
+-- ---------------------------------------------------------------------------
+-- A listing wears the site's own face.
+-- ---------------------------------------------------------------------------
+-- The board drew a rank number, a colour and a hand-typed tagline, so every
+-- row looked like every other row. Builders had already published an icon, a
+-- description and a share image on their own site; we now read those at list
+-- time, show them in the form for correction, and store what was approved.
+-- Nullable throughout: a site with no meta tags still lists fine, it just
+-- falls back to the tinted initial it always had.
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS favicon_url TEXT;
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS image_url TEXT;

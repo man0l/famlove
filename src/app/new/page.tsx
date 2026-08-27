@@ -4,6 +4,7 @@ import { currentUser } from "@/lib/session";
 import { sql } from "@/lib/db";
 import Link from "next/link";
 import { Sticker } from "@/components/Sticker";
+import { NewProjectForm } from "@/components/NewProjectForm";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "List a project" };
@@ -30,9 +31,9 @@ export default async function NewProjectPage({
         <Sticker name="receipt" size={70} float="slow" className="shrink-0" />
       </div>
       <p className="mt-3 text-mute">
-        As many as you ship. Each one gets its own wall, and rank counts
-        people rather than listings — so a second project moves you up only if
-        a second crowd shows up for it.
+        Paste the link and we&apos;ll read your site&apos;s own icon, title and
+        description. Everything arrives filled in and everything stays
+        editable — you get the last word.
       </p>
 
       {existing.length > 0 && (
@@ -56,28 +57,7 @@ export default async function NewProjectPage({
         </div>
       )}
 
-      {query.error && (
-        <p className="mt-5 rounded-2xl border border-love/40 bg-love/10 px-4 py-3 text-sm text-love-soft">
-          {query.error}
-        </p>
-      )}
-
-      <form action="/api/projects" method="post" className="mt-7 space-y-4">
-        <Field label="Name" name="name" placeholder="slashloop" maxLength={60} required />
-        <Field
-          label="Tagline"
-          name="tagline"
-          placeholder="Viral video tracker — finds outliers before they peak"
-          maxLength={90}
-        />
-        <Field label="URL" name="url" placeholder="slashloop.com" required />
-        <button
-          type="submit"
-          className="btn-love w-full px-5 py-4 font-semibold"
-        >
-          Put it on the board
-        </button>
-      </form>
+      <NewProjectForm error={query.error} />
 
       <p className="mt-6 text-sm leading-relaxed text-mute">
         An empty wall is worse than no wall. Before you post the link anywhere,
@@ -85,32 +65,5 @@ export default async function NewProjectPage({
         signals failure louder than no page at all.
       </p>
     </div>
-  );
-}
-
-function Field({
-  label,
-  name,
-  placeholder,
-  maxLength,
-  required,
-}: {
-  label: string;
-  name: string;
-  placeholder: string;
-  maxLength?: number;
-  required?: boolean;
-}) {
-  return (
-    <label className="block">
-      <span className="text-sm font-medium text-mute">{label}</span>
-      <input
-        name={name}
-        placeholder={placeholder}
-        maxLength={maxLength}
-        required={required}
-        className="mt-1.5 w-full rounded-2xl border border-line bg-ink px-4 py-3 outline-none transition focus:border-love"
-      />
-    </label>
   );
 }

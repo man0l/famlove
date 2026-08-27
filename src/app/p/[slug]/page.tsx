@@ -10,6 +10,7 @@ import { sql } from "@/lib/db";
 import { RALLY_MIN_GOAL, SITE_URL } from "@/lib/config";
 import { Sticker } from "@/components/Sticker";
 import { XIcon } from "@/components/XIcon";
+import { ProjectMark } from "@/components/ProjectMark";
 import { ListedBanner } from "@/components/ListedBanner";
 import { EmailPrompt } from "@/components/EmailPrompt";
 
@@ -104,7 +105,14 @@ export default async function ProjectPage({ params, searchParams }: Params) {
               {page.rank ? `#${page.rank}` : "—"}
             </span>
             <div className="min-w-0">
-              <h1 className="display text-4xl">{project.name}</h1>
+              <h1 className="display flex items-center gap-3 text-4xl">
+                <ProjectMark
+                  favicon={project.faviconUrl}
+                  name={project.name}
+                  size={38}
+                />
+                <span className="min-w-0 truncate">{project.name}</span>
+              </h1>
               <p className="mt-1.5 text-mute">{project.tagline}</p>
               <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-mute">
                 <Link href={`/u/${project.ownerHandle}`} className="hover:text-chalk">
