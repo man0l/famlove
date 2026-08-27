@@ -10,6 +10,7 @@ import { RALLY_MIN_GOAL, SITE_URL } from "@/lib/config";
 import { Sticker } from "@/components/Sticker";
 import { XIcon } from "@/components/XIcon";
 import { ListedBanner } from "@/components/ListedBanner";
+import { EmailPrompt } from "@/components/EmailPrompt";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +51,12 @@ export default async function ProjectPage({ params, searchParams }: Params) {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
+      {query.saved === "1" && (
+        <p className="mb-6 rounded-2xl border border-lime/40 bg-lime/10 px-4 py-3 text-sm text-lime">
+          Saved. You&apos;ll hear the next time somebody shows up.
+        </p>
+      )}
+
       {justListed && (
         <ListedBanner
           projectName={project.name}
@@ -111,6 +118,13 @@ export default async function ProjectPage({ params, searchParams }: Params) {
             projectUrl={`${SITE_URL}/p/${slug}`}
             autoLoves={page.viewerAutoLoves}
           />
+
+          {/* Owners with no address never learn the digest exists. */}
+          {isOwner && !user?.email && (
+            <div className="mt-4">
+              <EmailPrompt next={`/p/${slug}`} projectName={project.name} />
+            </div>
+          )}
 
           {rally && (
             <div className="mt-4">
