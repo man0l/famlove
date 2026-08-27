@@ -132,7 +132,18 @@ export default async function ProjectPage({ params, searchParams }: Params) {
           </div>
         </div>
 
-        <div className="lg:col-start-2 lg:row-start-1 lg:sticky lg:top-20 lg:self-start">
+        {/*
+          Not sticky, deliberately.
+
+          This block used to carry `lg:sticky lg:top-20`. A sticky grid item is
+          only held inside its own grid area in theory; in practice it pinned
+          at the top of the viewport and kept floating there while the sidebar
+          in row 2 scrolled underneath, so the give button drew straight on top
+          of the rally box — 74px of overlapping text, reproduced at scrollY
+          200. Two paragraphs printed over each other is a far worse trade than
+          a button that scrolls away like everything else.
+        */}
+        <div className="lg:col-start-2 lg:row-start-1 lg:self-start">
           <GiveButton
             slug={slug}
             projectName={project.name}
