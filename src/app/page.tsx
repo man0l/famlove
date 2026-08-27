@@ -4,7 +4,7 @@ import { Sticker } from "@/components/Sticker";
 import { lovedBoard, siteStats } from "@/lib/queries";
 import { currentUser } from "@/lib/session";
 import { sql } from "@/lib/db";
-import { ENTRY_TIER, MAX_PROJECTS_PER_USER } from "@/lib/config";
+import { ENTRY_TIER } from "@/lib/config";
 import { formatCents } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +29,7 @@ export default async function HomePage() {
         WHERE owner_id = ${user.id} AND removed_at IS NULL ORDER BY id
       `) as { slug: string }[])
     : [];
-  const roomForMore = Boolean(user) && mine.length < MAX_PROJECTS_PER_USER;
+  const listedSomething = mine.length > 0;
 
   /*
    * The card a builder gets to post — showing a real one beats describing it.
@@ -91,8 +91,9 @@ export default async function HomePage() {
             </div>
 
             {/* Having one project used to remove every route to listing a
-                second — the primary button simply swapped meaning. */}
-            {roomForMore && (
+                second — the primary button simply swapped meaning. Anyone
+                still on zero is already looking at "List your project". */}
+            {listedSomething && (
               <p className="mt-4 text-sm text-mute">
                 Shipped something else?{" "}
                 <Link href="/new" className="font-medium text-love">

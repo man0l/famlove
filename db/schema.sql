@@ -163,9 +163,9 @@ CREATE TABLE IF NOT EXISTS email_sends (
 -- More than one project per builder.
 -- ---------------------------------------------------------------------------
 -- owner_id was UNIQUE, which meant a person shipping three things could show
--- exactly one of them. The limit stays — an uncapped board fills with spam
--- listings — but it moves from "one, enforced by an index" to "a few,
--- enforced where it can be counted". See MAX_PROJECTS_PER_USER.
+-- exactly one of them. There is no limit now, at this layer or any other:
+-- rank counts distinct backers, so listings nobody shows up for earn nothing.
+-- See the note where MAX_PROJECTS_PER_USER used to live, in src/lib/config.ts.
 ALTER TABLE projects DROP CONSTRAINT IF EXISTS projects_owner_id_key;
 CREATE INDEX IF NOT EXISTS projects_owner ON projects (owner_id) WHERE removed_at IS NULL;
 

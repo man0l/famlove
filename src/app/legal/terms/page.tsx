@@ -3,7 +3,6 @@ import Link from "next/link";
 import { LEGAL } from "@/lib/legal";
 import {
   DAILY_GIVE_CEILING,
-  MAX_PROJECTS_PER_USER,
   MIN_X_ACCOUNT_AGE_DAYS,
   MIN_X_POSTS,
   TIERS,
@@ -81,7 +80,10 @@ export default function TermsPage() {
             One account per person, and one payment card per account. We store a
             fingerprint of your card — never the number — to enforce that.
           </Bullet>
-          <Bullet>Up to {MAX_PROJECTS_PER_USER} project listings per account.</Bullet>
+          <Bullet>
+            As many project listings as you have projects. There is no cap on
+            the number — there are rules about what each one may be, in §9.
+          </Bullet>
         </ul>
         <p className="mt-3">
           You are responsible for what happens under your account. Tell us at{" "}

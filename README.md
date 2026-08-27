@@ -258,7 +258,7 @@ so silence is the default.
 | `users` | `x_id`, `handle`, `x_created_at`, `banned_at` | X OAuth 2.0. Accounts under 30 days are rejected at the door. |
 | `cards` | `user_id`, `stripe_fingerprint UNIQUE` | The sybil ledger. One card, one human. |
 | `wallets` | `cents_balance`, `cents_given`, `cents_topped_up` | Balance decrements in the same statement as the love insert. |
-| `projects` | `owner_id`, `slug`, `name`, `url`, `tagline` | Up to `MAX_PROJECTS_PER_USER` (5) each, counted inside the INSERT. Capped, not unlimited — an uncapped board fills with spam listings. |
+| `projects` | `owner_id`, `slug`, `name`, `url`, `tagline` | As many per owner as you like — no cap, by design. Rank counts distinct backers, so a listing nobody shows up for ranks nowhere; abuse is handled by removal, not by a number. |
 | `loves` | `(from_user_id, project_id, day_utc)` **UNIQUE** | The entire game lives here. |
 | `topups` | `(provider, provider_ref)` **UNIQUE** | Idempotent. Webhook-driven. |
 | `rallies` | `project_id`, `starts_at`, `ends_at`, `goal` | One per project per UTC day, by unique index. Opened by the 00:05 cron. |

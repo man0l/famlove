@@ -4,7 +4,6 @@ import { currentUser } from "@/lib/session";
 import { sql } from "@/lib/db";
 import Link from "next/link";
 import { Sticker } from "@/components/Sticker";
-import { MAX_PROJECTS_PER_USER } from "@/lib/config";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "List a project" };
@@ -21,8 +20,6 @@ export default async function NewProjectPage({
     SELECT slug, name FROM projects
     WHERE owner_id = ${user.id} AND removed_at IS NULL ORDER BY id
   `) as { slug: string; name: string }[];
-  // Only bounce them when there is genuinely no room left.
-  if (existing.length >= MAX_PROJECTS_PER_USER) redirect(`/p/${existing[0].slug}`);
 
   const query = await searchParams;
 
@@ -33,15 +30,16 @@ export default async function NewProjectPage({
         <Sticker name="receipt" size={70} float="slow" className="shrink-0" />
       </div>
       <p className="mt-3 text-mute">
-        Up to {MAX_PROJECTS_PER_USER} each — enough for everything you actually
-        ship, few enough that the board stays things people made rather than
-        things people listed.
+        As many as you ship. Each one gets its own wall, and rank counts
+        people rather than listings — so a second project moves you up only if
+        a second crowd shows up for it.
       </p>
 
       {existing.length > 0 && (
         <div className="card mt-5 p-4">
           <p className="text-xs font-medium text-mute">
-            You already have {existing.length} of {MAX_PROJECTS_PER_USER}
+            You already have {existing.length}{" "}
+            {existing.length === 1 ? "project" : "projects"}
           </p>
           <ul className="mt-2 flex flex-wrap gap-2">
             {existing.map((project) => (

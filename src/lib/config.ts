@@ -16,15 +16,19 @@ export const BOARD_WINDOW_DAYS = 7;
 export const MIN_X_ACCOUNT_AGE_DAYS = 30;
 export const MIN_X_POSTS = 1;
 
-/**
- * How many things one person may list.
+/*
+ * There is no cap on how many things one person may list, and the absence is
+ * deliberate — it is documented here because the constant that used to live
+ * at this line is the first thing anyone will go looking for.
  *
- * It was one, enforced by a UNIQUE on projects.owner_id, which meant a
- * builder shipping three products could show exactly one of them. A cap is
- * still needed — uncapped, the board fills with spam listings and stops being
- * a board — but it belongs at a number a real person might reach, not at one.
+ * It was one (a UNIQUE on projects.owner_id), then five. Both were guesses at
+ * how much a real builder ships, and both were wrong the same way: they
+ * stopped honest people at a number while stopping spam not at all. Rank
+ * counts distinct backers, so a listing nobody shows up for ranks nowhere —
+ * flooding the board with empty projects buys the flooder no rank. What is
+ * left is ordinary abuse, and that is removal under §9 of the terms, which
+ * reads the listing rather than counting it.
  */
-export const MAX_PROJECTS_PER_USER = 5;
 
 export type TierId = "hook" | "default" | "patron";
 

@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { Face } from "@/components/Face";
 import { profilePage } from "@/lib/queries";
 import { currentUser } from "@/lib/session";
-import { MAX_PROJECTS_PER_USER } from "@/lib/config";
 import { Sticker } from "@/components/Sticker";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +22,6 @@ export default async function ProfilePage({ params }: Params) {
   if (!page) notFound();
 
   const isMe = viewer?.handle.toLowerCase() === page.handle.toLowerCase();
-  const roomForMore = isMe && page.projects.length < MAX_PROJECTS_PER_USER;
 
   const ratio =
     page.received === 0 ? page.gave : Math.round((page.gave / page.received) * 10) / 10;
@@ -98,12 +96,12 @@ export default async function ProfilePage({ params }: Params) {
             ))}
           </ul>
 
-          {roomForMore && (
+          {isMe && (
             <Link
               href="/new"
               className="mt-4 block rounded-full border border-dashed border-line-2 px-4 py-2.5 text-center text-sm font-medium text-mute transition hover:border-love hover:text-love"
             >
-              List another — {MAX_PROJECTS_PER_USER - page.projects.length} left
+              List another
             </Link>
           )}
         </section>

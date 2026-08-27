@@ -3,7 +3,6 @@ import { requireUser } from "@/lib/session";
 import { sql } from "@/lib/db";
 import { freeSlug, normalizeUrl } from "@/lib/users";
 import { isUniqueViolation } from "@/lib/queries";
-import { MAX_PROJECTS_PER_USER } from "@/lib/config";
 
 export async function POST(request: NextRequest) {
   const { user, error } = await requireUser();
@@ -28,18 +27,11 @@ export async function POST(request: NextRequest) {
 
   let created: { slug: string }[];
   try {
-    /*
-     * The cap is counted inside the INSERT rather than checked before it, so
-     * two submissions racing each other cannot both find room. Zero rows back
-     * means the cap was already reached.
-     */
+    // No cap to count, so nothing to race: a plain insert. See config.ts for
+    // why listing is unlimited and what stops spam instead.
     created = (await sql`
       INSERT INTO projects (owner_id, slug, name, url, tagline)
-      SELECT ${user.id}, ${slug}, ${name}, ${url}, ${tagline}
-      WHERE (
-        SELECT COUNT(*) FROM projects
-        WHERE owner_id = ${user.id} AND removed_at IS NULL
-      ) < ${MAX_PROJECTS_PER_USER}::int
+      VALUES (${user.id}, ${slug}, ${name}, ${url}, ${tagline})
       RETURNING slug
     `) as { slug: string }[];
   } catch (err) {
@@ -49,11 +41,7 @@ export async function POST(request: NextRequest) {
     throw err;
   }
 
-  if (!created[0]) {
-    return fail(
-      `That's ${MAX_PROJECTS_PER_USER} projects — the limit. Remove one first.`,
-    );
-  }
+  if (!created[0]) return fail("Couldn't save that one. Try again.");
 
   return NextResponse.redirect(
     new URL(`/p/${slug}?listed=1`, request.nextUrl.origin),

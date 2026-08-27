@@ -12,7 +12,6 @@ import { Sticker } from "@/components/Sticker";
 import { XIcon } from "@/components/XIcon";
 import { ListedBanner } from "@/components/ListedBanner";
 import { EmailPrompt } from "@/components/EmailPrompt";
-import { MAX_PROJECTS_PER_USER } from "@/lib/config";
 
 export const dynamic = "force-dynamic";
 
@@ -51,13 +50,24 @@ export default async function ProjectPage({ params, searchParams }: Params) {
 
   const justListed = query.listed === "1" && isOwner;
 
-  // How many other things this owner has here, and whether there is room.
+  // What else this owner has here. Listing is uncapped, so the sidebar shows
+  // a window and sends them to their profile for the rest — a card that grows
+  // without limit is a card that eventually eats the page.
   const owned = isOwner
     ? ((await sql`
         SELECT slug, name FROM projects
         WHERE owner_id = ${user!.id} AND removed_at IS NULL ORDER BY id
       `) as { slug: string; name: string }[])
     : [];
+  const OWNED_SHOWN = 6;
+  // Always keep the one being viewed in the window, even if it sorts past it.
+  const ownedShown = owned
+    .slice(0, OWNED_SHOWN)
+    .concat(
+      owned.findIndex((o) => o.slug === slug) >= OWNED_SHOWN
+        ? [owned.find((o) => o.slug === slug)!]
+        : [],
+    );
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
@@ -281,7 +291,7 @@ export default async function ProjectPage({ params, searchParams }: Params) {
                 {owned.length === 1 ? "Your project" : "Your projects"}
               </p>
               <ul className="mt-2 space-y-1">
-                {owned.map((other) => (
+                {ownedShown.map((other) => (
                   <li key={other.slug}>
                     <Link
                       href={`/p/${other.slug}`}
@@ -295,14 +305,20 @@ export default async function ProjectPage({ params, searchParams }: Params) {
                   </li>
                 ))}
               </ul>
-              {owned.length < MAX_PROJECTS_PER_USER && (
+              {owned.length > ownedShown.length && (
                 <Link
-                  href="/new"
-                  className="mt-3 block rounded-full border border-dashed border-line-2 px-4 py-2 text-center text-sm font-medium text-mute transition hover:border-love hover:text-love"
+                  href={`/u/${user!.handle}`}
+                  className="mt-2 block text-sm text-mute transition hover:text-love"
                 >
-                  List another
+                  All {owned.length} →
                 </Link>
               )}
+              <Link
+                href="/new"
+                className="mt-3 block rounded-full border border-dashed border-line-2 px-4 py-2 text-center text-sm font-medium text-mute transition hover:border-love hover:text-love"
+              >
+                List another
+              </Link>
             </div>
           )}
 
