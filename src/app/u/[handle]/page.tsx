@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Face } from "@/components/Face";
 import { profilePage } from "@/lib/queries";
 import { currentUser } from "@/lib/session";
+import { MAX_PROJECTS_PER_USER } from "@/lib/config";
 import { Sticker } from "@/components/Sticker";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +21,9 @@ export default async function ProfilePage({ params }: Params) {
   const viewer = await currentUser();
   const page = await profilePage(handle, viewer?.id ?? null);
   if (!page) notFound();
+
+  const isMe = viewer?.handle.toLowerCase() === page.handle.toLowerCase();
+  const roomForMore = isMe && page.projects.length < MAX_PROJECTS_PER_USER;
 
   const ratio =
     page.received === 0 ? page.gave : Math.round((page.gave / page.received) * 10) / 10;
@@ -65,7 +69,13 @@ export default async function ProfilePage({ params }: Params) {
       {page.projects.length > 0 && (
         <section className="card mt-4 p-5">
           <p className="text-xs font-medium text-mute">
-            {page.projects.length === 1 ? "Their project" : "Their projects"}
+            {isMe
+              ? page.projects.length === 1
+                ? "Your project"
+                : "Your projects"
+              : page.projects.length === 1
+                ? "Their project"
+                : "Their projects"}
           </p>
           <ul className="mt-2 space-y-3">
             {page.projects.map((project) => (
@@ -87,6 +97,24 @@ export default async function ProfilePage({ params }: Params) {
               </li>
             ))}
           </ul>
+
+          {roomForMore && (
+            <Link
+              href="/new"
+              className="mt-4 block rounded-full border border-dashed border-line-2 px-4 py-2.5 text-center text-sm font-medium text-mute transition hover:border-love hover:text-love"
+            >
+              List another — {MAX_PROJECTS_PER_USER - page.projects.length} left
+            </Link>
+          )}
+        </section>
+      )}
+
+      {isMe && page.projects.length === 0 && (
+        <section className="card mt-4 p-5 text-center">
+          <p className="text-sm text-mute">You haven&apos;t listed anything yet.</p>
+          <Link href="/new" className="btn-love mt-3 inline-block px-5 py-2.5 text-sm font-semibold">
+            List your project →
+          </Link>
         </section>
       )}
 

@@ -6,11 +6,13 @@ import { GiveButton } from "@/components/GiveButton";
 import { RallyBar } from "@/components/RallyBar";
 import { projectPage } from "@/lib/queries";
 import { currentUser } from "@/lib/session";
+import { sql } from "@/lib/db";
 import { RALLY_MIN_GOAL, SITE_URL } from "@/lib/config";
 import { Sticker } from "@/components/Sticker";
 import { XIcon } from "@/components/XIcon";
 import { ListedBanner } from "@/components/ListedBanner";
 import { EmailPrompt } from "@/components/EmailPrompt";
+import { MAX_PROJECTS_PER_USER } from "@/lib/config";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +50,14 @@ export default async function ProjectPage({ params, searchParams }: Params) {
   );
 
   const justListed = query.listed === "1" && isOwner;
+
+  // How many other things this owner has here, and whether there is room.
+  const owned = isOwner
+    ? ((await sql`
+        SELECT slug, name FROM projects
+        WHERE owner_id = ${user!.id} AND removed_at IS NULL ORDER BY id
+      `) as { slug: string; name: string }[])
+    : [];
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
@@ -207,10 +217,11 @@ export default async function ProjectPage({ params, searchParams }: Params) {
               method="post"
               className="rounded-[26px] border border-dashed border-line p-4"
             >
-              <p className="display text-lg">Start a rally</p>
+              <p className="display text-lg">Start today&apos;s rally</p>
               <p className="mt-1.5 text-sm text-mute">
-                24 hours, one stated goal, a live counter. One per project per
-                week — it&apos;s the only escalation this design allows.
+                A rally opens itself each morning at 00:00 UTC with a goal
+                based on your best day. Listed since then? Start one now — a
+                stated goal and a live counter until midnight.
               </p>
               <div className="mt-3 flex gap-2">
                 <input
@@ -263,6 +274,37 @@ export default async function ProjectPage({ params, searchParams }: Params) {
               <li>· Unspent cents refundable in one click.</li>
             </ul>
           </div>
+
+          {isOwner && (
+            <div className="card p-5">
+              <p className="text-xs font-medium text-mute">
+                {owned.length === 1 ? "Your project" : "Your projects"}
+              </p>
+              <ul className="mt-2 space-y-1">
+                {owned.map((other) => (
+                  <li key={other.slug}>
+                    <Link
+                      href={`/p/${other.slug}`}
+                      className={`block truncate text-sm transition hover:text-love ${
+                        other.slug === slug ? "font-semibold text-chalk" : "text-mute"
+                      }`}
+                    >
+                      {other.slug === slug ? "› " : "  "}
+                      {other.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              {owned.length < MAX_PROJECTS_PER_USER && (
+                <Link
+                  href="/new"
+                  className="mt-3 block rounded-full border border-dashed border-line-2 px-4 py-2 text-center text-sm font-medium text-mute transition hover:border-love hover:text-love"
+                >
+                  List another
+                </Link>
+              )}
+            </div>
+          )}
 
           <a
             href={`https://x.com/intent/post?text=${shareText}`}

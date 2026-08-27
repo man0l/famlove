@@ -268,12 +268,16 @@ export default async function WalletPage({
       </section>
 
       <div className="mt-10 flex items-center justify-between text-sm text-mute">
-        <Link
-          href={mine ? `/p/${mine.slug}` : "/new"}
-          className="font-medium transition hover:text-chalk"
-        >
-          {mine ? "Your wall →" : "List your project →"}
-        </Link>
+        <span className="flex gap-4">
+          {mine && (
+            <Link href={`/p/${mine.slug}`} className="font-medium transition hover:text-chalk">
+              Your wall →
+            </Link>
+          )}
+          <Link href="/new" className="font-medium transition hover:text-chalk">
+            {mine ? "List another" : "List your project →"}
+          </Link>
+        </span>
         <form action="/api/auth/logout" method="post">
           <button type="submit" className="transition hover:text-chalk">
             Sign out

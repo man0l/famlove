@@ -4,7 +4,7 @@ import { Sticker } from "@/components/Sticker";
 import { lovedBoard, siteStats } from "@/lib/queries";
 import { currentUser } from "@/lib/session";
 import { sql } from "@/lib/db";
-import { ENTRY_TIER } from "@/lib/config";
+import { ENTRY_TIER, MAX_PROJECTS_PER_USER } from "@/lib/config";
 import { formatCents } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
@@ -26,9 +26,10 @@ export default async function HomePage() {
   const mine = user
     ? ((await sql`
         SELECT slug FROM projects
-        WHERE owner_id = ${user.id} AND removed_at IS NULL
-      `) as { slug: string }[])[0]
-    : undefined;
+        WHERE owner_id = ${user.id} AND removed_at IS NULL ORDER BY id
+      `) as { slug: string }[])
+    : [];
+  const roomForMore = Boolean(user) && mine.length < MAX_PROJECTS_PER_USER;
 
   /*
    * The card a builder gets to post — showing a real one beats describing it.
@@ -67,12 +68,12 @@ export default async function HomePage() {
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              {mine ? (
+              {mine.length > 0 ? (
                 <Link
-                  href={`/p/${mine.slug}`}
+                  href={mine.length === 1 ? `/p/${mine[0].slug}` : `/u/${user!.handle}`}
                   className="btn-love px-6 py-3.5 font-semibold"
                 >
-                  See your wall →
+                  {mine.length === 1 ? "See your wall →" : "See your walls →"}
                 </Link>
               ) : (
                 <Link href="/new" className="btn-love px-6 py-3.5 font-semibold">
@@ -88,6 +89,17 @@ export default async function HomePage() {
                   : `Back someone else · ${formatCents(anchor.cents)}`}
               </Link>
             </div>
+
+            {/* Having one project used to remove every route to listing a
+                second — the primary button simply swapped meaning. */}
+            {roomForMore && (
+              <p className="mt-4 text-sm text-mute">
+                Shipped something else?{" "}
+                <Link href="/new" className="font-medium text-love">
+                  List another →
+                </Link>
+              </p>
+            )}
           </div>
 
           {/*

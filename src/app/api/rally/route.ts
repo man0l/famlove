@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
 
   const result = await startRally(Number(project.id), goal);
   if (!result.ok) {
-    return back("rally_error=One+rally+per+project+per+week.");
+    return back("rally_error=Today%27s+rally+is+already+open.");
   }
   return back("rally=started");
 }

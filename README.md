@@ -143,7 +143,7 @@ and the rebuttal has to exist before launch.
 | One-sentence legibility | **Kept** | "Vote with cents, not dollars. One cent each, capped." |
 | Arguable ethics | **Kept, different argument** | Attack shifts to "a card reader on friendship." Rebuttal: one cent, hard-capped, unstackable, public ledger. |
 | Sunk-cost defence | **Broken → swapped** | Nobody defends a cent. **Streaks and the public give/receive ratio** — people defend a 41-day streak. |
-| Escalation events | **Broken → swapped** | No "$14,013 → $17,000" moment when every vote is a cent. **The Rally**: one per project per week, 24h, stated goal, live counter. |
+| Escalation events | **Broken → swapped** | No "$14,013 → $17,000" moment when every vote is a cent. **The Rally**: one per project per day, opening itself at 00:00 UTC with a goal drawn from that project's best day, 24h, live counter. |
 | Clones market you | **Lost** | famlove arrives at board 401 with no gravity. Its only substitute is being the first named rebuttal. |
 
 ---
@@ -261,7 +261,7 @@ so silence is the default.
 | `projects` | `owner_id`, `slug`, `name`, `url`, `tagline` | Up to `MAX_PROJECTS_PER_USER` (5) each, counted inside the INSERT. Capped, not unlimited — an uncapped board fills with spam listings. |
 | `loves` | `(from_user_id, project_id, day_utc)` **UNIQUE** | The entire game lives here. |
 | `topups` | `(provider, provider_ref)` **UNIQUE** | Idempotent. Webhook-driven. |
-| `rallies` | `project_id`, `starts_at`, `ends_at`, `goal` | One per project per week, by unique index. |
+| `rallies` | `project_id`, `starts_at`, `ends_at`, `goal` | One per project per UTC day, by unique index. Opened by the 00:05 cron. |
 | `expenses` | `occurred_on`, `label`, `cents` | The other side of `/cents`. |
 | `daily_rollups` | `backers`, `streak_days`, `emailed_at` | Written by the 00:05 UTC cron. |
 
