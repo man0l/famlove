@@ -43,8 +43,26 @@ export default async function HomePage() {
    * face on it argues against listing rather than for it.
    */
   const SHOWCASE_SLUG = "slashloop-dev";
+  /*
+   * Pinned by a direct read, not by finding it in the board. The board holds
+   * only the top 50 by 7-day backers, so `board.find` would quietly return
+   * nothing the day slashloop slips to 51st — and the hero would swap to some
+   * other project without anyone noticing. A direct lookup keeps the example
+   * fixed regardless of where it ranks. The board fallbacks stay for the case
+   * where the pinned project has been removed entirely.
+   */
+  const [pinned] = (await sql`
+    SELECT p.slug, p.name,
+           COUNT(DISTINCT l.from_user_id)::int AS backers
+    FROM projects p
+    LEFT JOIN loves l
+      ON l.project_id = p.id
+     AND l.day_utc >= (now() AT TIME ZONE 'utc')::date - 6
+    WHERE p.slug = ${SHOWCASE_SLUG} AND p.removed_at IS NULL
+    GROUP BY p.slug, p.name
+  `) as { slug: string; name: string; backers: number }[];
   const showcase =
-    board.find((entry) => entry.slug === SHOWCASE_SLUG) ??
+    pinned ??
     [...board].sort((a, b) => b.backersToday - a.backersToday)[0] ??
     board[0];
 
@@ -112,16 +130,19 @@ export default async function HomePage() {
           </div>
 
           {/*
-            The reason a builder lists is that they get something to post. So
-            show the artifact rather than describing it: a real project's real
-            share card, rendered from the database, updating as people show up.
+            The reason a builder lists is that they get something to post, so
+            show the artifact rather than describing it. This is the permanent
+            example endpoint, not the live share card: it draws slashloop from
+            its all-time wall, so the faces never age out of a rolling window
+            and the hero always has a full crowd on it. Pinned to one project
+            so the example does not change identity between visits.
           */}
           {showcase && (
             <figure className="min-w-0">
               <div className="overflow-hidden rounded-[22px] border border-line bg-ink-2 shadow-[0_24px_70px_-30px_rgba(255,61,104,0.55)]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={`/p/${showcase.slug}/opengraph-image`}
+                  src="/api/example-card"
                   alt={`The share card for ${showcase.name}: ${showcase.backers} people showed up`}
                   width={1200}
                   height={630}
@@ -133,7 +154,7 @@ export default async function HomePage() {
                 <Link href={`/p/${showcase.slug}`} className="text-chalk hover:text-love">
                   {showcase.name}
                 </Link>
-                &apos;s, live right now.
+                &apos;s.
               </figcaption>
             </figure>
           )}

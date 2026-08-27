@@ -404,6 +404,72 @@ export async function projectPage(
   };
 }
 
+/**
+ * A stable card for the homepage example.
+ *
+ * The share card people post reads the rolling 7-day wall, which is right for
+ * a live project but wrong for a permanent example: the demo backers on the
+ * showcase would age out of that window and the hero would go faceless within
+ * a week. This reads the *all-time* wall instead — every distinct human who
+ * ever backed the project — so the example is a fixed snapshot that never
+ * fades, decoupled from both the rolling window and the live ranking.
+ *
+ * It is not the card anyone posts; it is the picture of the format, on the
+ * one page whose job is to explain the format.
+ */
+export type ShowcaseCard = {
+  name: string;
+  tagline: string;
+  rank: number | null;
+  ownerHandle: string;
+  ownerAvatar: string | null;
+  backers: number;
+  faces: Face[];
+};
+
+export async function showcaseCard(
+  slug: string,
+  limit = 40,
+): Promise<ShowcaseCard | null> {
+  const project = await projectBySlug(slug);
+  if (!project) return null;
+
+  const rank = await lovedRank(project.id);
+
+  const [stat] = (await sql`
+    SELECT COUNT(DISTINCT from_user_id)::int AS backers
+    FROM loves WHERE project_id = ${project.id}
+  `) as { backers: number }[];
+
+  // One row per distinct backer, newest cent first, capped — the same shape
+  // the wall queries produce, just without a date bound.
+  const wall = (await sql`
+    SELECT u.handle, u.avatar_url
+    FROM (
+      SELECT DISTINCT ON (l.from_user_id) l.from_user_id, l.created_at
+      FROM loves l
+      WHERE l.project_id = ${project.id}
+      ORDER BY l.from_user_id, l.created_at DESC
+    ) b
+    JOIN users u ON u.id = b.from_user_id
+    ORDER BY b.created_at DESC
+    LIMIT ${limit}::int
+  `) as Record<string, unknown>[];
+
+  return {
+    name: project.name,
+    tagline: project.tagline,
+    rank,
+    ownerHandle: project.ownerHandle,
+    ownerAvatar: project.ownerAvatar,
+    backers: Number(stat?.backers ?? 0),
+    faces: wall.map((r) => ({
+      handle: String(r.handle),
+      avatarUrl: (r.avatar_url as string | null) ?? null,
+    })),
+  };
+}
+
 /* ---------------------------------------------------------------- RALLIES */
 
 /** The substitute for outbid's escalation moment: a timed, numeric event. */
