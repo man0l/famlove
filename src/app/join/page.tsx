@@ -22,6 +22,10 @@ export default async function JoinPage({
   const devLogin =
     process.env.ALLOW_DEV_LOGIN === "1" && process.env.NODE_ENV !== "production";
   const anchor = TIERS[1];
+  const next =
+    typeof query.next === "string" && /^\/[a-zA-Z0-9/_-]*$/.test(query.next)
+      ? query.next
+      : null;
 
   return (
     <div className="mx-auto max-w-lg px-4 py-14">
@@ -61,8 +65,11 @@ export default async function JoinPage({
       )}
 
       {xConfigured() ? (
-        <a href="/api/auth/x" className="btn-love mt-8 block px-5 py-4 text-center font-semibold">
-          Sign in with X
+        <a
+          href={`/api/auth/x${next ? `?next=${encodeURIComponent(next)}` : ""}`}
+          className="btn-love mt-8 block px-5 py-4 text-center font-semibold"
+        >
+          {next === "/new" ? "Sign in with X to list it" : "Sign in with X"}
         </a>
       ) : (
         <p className="mt-8 rounded-2xl border border-dashed border-line px-5 py-4 text-center text-sm text-mute">
@@ -82,6 +89,7 @@ export default async function JoinPage({
             real rules against the real database.
           </p>
           <div className="mt-3 flex gap-2">
+            <input type="hidden" name="next" value={next ?? "/wallet"} />
             <input
               name="handle"
               placeholder="handle"

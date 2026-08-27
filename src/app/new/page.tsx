@@ -13,7 +13,7 @@ export default async function NewProjectPage({
   searchParams: Promise<Record<string, string>>;
 }) {
   const user = await currentUser();
-  if (!user) redirect("/join");
+  if (!user) redirect("/join?next=%2Fnew");
 
   const existing = (await sql`
     SELECT slug FROM projects WHERE owner_id = ${user.id} AND removed_at IS NULL

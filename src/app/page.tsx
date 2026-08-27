@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { BoardRow } from "@/components/BoardRow";
 import { Sticker } from "@/components/Sticker";
-import { TrustRow } from "@/components/TrustRow";
 import { lovedBoard, siteStats } from "@/lib/queries";
 import { currentUser } from "@/lib/session";
+import { sql } from "@/lib/db";
 import { TIERS } from "@/lib/config";
 import { formatCents } from "@/lib/time";
 
@@ -18,82 +18,103 @@ export default async function HomePage() {
 
   const anchor = TIERS[1];
 
+  // Does the visitor already have a wall of their own? Decides whether the
+  // hero asks them to list, or shows them the thing they came back to see.
+  const mine = user
+    ? ((await sql`
+        SELECT slug FROM projects
+        WHERE owner_id = ${user.id} AND removed_at IS NULL
+      `) as { slug: string }[])[0]
+    : undefined;
+
+  /*
+   * The card a builder gets to post — showing a real one beats describing it.
+   * Pick the liveliest wall rather than simply rank #1: the top project can
+   * be having a quiet morning, and an example card with one face on it argues
+   * against listing rather than for it.
+   */
+  const showcase =
+    [...board].sort((a, b) => b.backersToday - a.backersToday)[0] ?? board[0];
+
   return (
     <div className="mx-auto max-w-5xl px-4">
       <section className="pt-12 pb-12 sm:pt-16">
-        <div className="grid items-start gap-8 lg:grid-cols-[1fr_auto]">
+        <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_1fr]">
           <div className="min-w-0">
             <p className="inline-flex items-center gap-2 rounded-full border border-love/30 bg-love/10 px-3.5 py-1.5 text-sm font-medium text-love-soft">
               <Sticker name="heart" size={16} />
-              You can&apos;t buy the top
+              Free to list · one project per person
             </p>
 
-            <h1 className="display mt-5 text-[2.6rem] sm:text-6xl">
-              Rank isn&apos;t dollars.
+            <h1 className="display mt-5 text-[2.6rem] sm:text-[3.4rem]">
+              Find out who actually
               <br />
-              It&apos;s <span className="text-love">how many people</span> spent
-              a cent on you today.
+              shows up for your app.
             </h1>
 
             <p className="mt-5 max-w-xl text-lg leading-relaxed text-mute">
-              One cent each. Capped at one per person, per project, per day — so
-              nobody can buy their way up, and{" "}
-              <span className="text-chalk">nobody can outspend you.</span> What a
-              cent buys is your face on somebody else&apos;s wall.
+              List your SaaS or side project and get a wall of the people who
+              backed it — each one a real human who spent exactly{" "}
+              <span className="text-chalk">one cent</span> to be there. Capped at
+              one per person per day, so nobody buys their way onto your wall and{" "}
+              <span className="text-chalk">nobody can outspend your friends.</span>
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              {user ? (
-                <Link href="/wallet" className="btn-love px-6 py-3.5 font-semibold">
-                  {user.centsBalance}¢ in your jar →
+              {mine ? (
+                <Link
+                  href={`/p/${mine.slug}`}
+                  className="btn-love px-6 py-3.5 font-semibold"
+                >
+                  See your wall →
                 </Link>
               ) : (
-                <Link href="/join" className="btn-love px-6 py-3.5 font-semibold">
-                  Get {anchor.grantedCents.toLocaleString()} cents ·{" "}
-                  {formatCents(anchor.cents)}
+                <Link href="/new" className="btn-love px-6 py-3.5 font-semibold">
+                  List your project →
                 </Link>
               )}
               <Link
-                href="/cents"
+                href={user ? "/wallet" : "/join"}
                 className="rounded-full border border-line px-5 py-3.5 font-medium text-mute transition hover:border-line-2 hover:text-chalk"
               >
-                Where every cent goes
+                {user
+                  ? `${user.centsBalance}¢ in your jar`
+                  : `Back someone else · ${formatCents(anchor.cents)}`}
               </Link>
             </div>
 
-            {/*
-              The reassurance sits with the button, not three screens down in a
-              FAQ. The moment someone considers paying is the moment they need it.
-            */}
-            <div className="mt-4">
-              <TrustRow compact />
-            </div>
+            <p className="mt-4 text-sm text-mute">
+              Listing is free and takes about thirty seconds. One project per
+              person — which is why the board isn&apos;t full of noise.
+            </p>
           </div>
 
-          {/* Decoration only. Nothing here states a fact. */}
-          <div
-            aria-hidden="true"
-            className="relative hidden h-64 w-56 shrink-0 lg:block"
-          >
-            <Sticker
-              name="penny"
-              size={132}
-              float="slow"
-              className="absolute right-4 top-2"
-            />
-            <Sticker
-              name="sparkle"
-              size={68}
-              float="slower"
-              className="absolute left-0 top-28"
-            />
-            <Sticker
-              name="hands"
-              size={92}
-              float="slow"
-              className="absolute bottom-2 right-10"
-            />
-          </div>
+          {/*
+            The reason a builder lists is that they get something to post. So
+            show the artifact rather than describing it: a real project's real
+            share card, rendered from the database, updating as people show up.
+          */}
+          {showcase && (
+            <figure className="min-w-0">
+              <div className="overflow-hidden rounded-[22px] border border-line bg-ink-2 shadow-[0_24px_70px_-30px_rgba(255,61,104,0.55)]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`/p/${showcase.slug}/opengraph-image`}
+                  alt={`The share card for ${showcase.name}: ${showcase.backers} people showed up`}
+                  width={1200}
+                  height={630}
+                  className="block w-full"
+                />
+              </div>
+              <figcaption className="mt-3 text-center text-sm text-mute">
+                This is the card you post. It&apos;s{" "}
+                <Link href={`/p/${showcase.slug}`} className="text-chalk hover:text-love">
+                  {showcase.name}
+                </Link>
+                &apos;s, live right now.
+              </figcaption>
+            </figure>
+          )}
         </div>
 
         <dl className="mt-10 grid grid-cols-2 gap-2 sm:grid-cols-4">

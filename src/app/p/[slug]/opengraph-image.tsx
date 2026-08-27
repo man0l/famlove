@@ -2,7 +2,17 @@ import { ImageResponse } from "next/og";
 import { projectPage } from "@/lib/queries";
 import { initials } from "@/components/Face";
 
-export const alt = "The wall of everyone who showed up today";
+export const alt = "The wall of everyone who showed up";
+
+/*
+ * The homepage embeds one of these, and social scrapers fetch them in bursts,
+ * so every view would otherwise cost a database round-trip and a satori
+ * render. A minute of staleness is invisible on a wall that changes when
+ * somebody spends a cent, and it collapses the load onto the edge.
+ */
+const CACHE = {
+  "Cache-Control": "public, max-age=60, s-maxage=60, stale-while-revalidate=300",
+};
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -39,11 +49,23 @@ export default async function Image({
           famlove.lol
         </div>
       ),
-      size,
+      { ...size, headers: CACHE },
     );
   }
 
-  const faces = page.wallToday.length ? page.wallToday : page.wall7d;
+  /*
+   * Pick a window and label it honestly.
+   *
+   * This used to draw the week's faces whenever today was thin while still
+   * captioning them "N showed up today" — so the picture and the sentence
+   * disagreed, and the sentence was the weaker of the two. It was worst in
+   * the hours right after 00:00 UTC, when the cap resets and today's wall is
+   * empty, which is precisely when a builder is most likely to post it.
+   */
+  const useToday = page.backersToday >= 3 || page.backers7d === 0;
+  const faces = useToday ? page.wallToday : page.wall7d;
+  const count = useToday ? page.backersToday : page.backers7d;
+  const window = useToday ? "showed up today" : "showed up this week";
   const shown = faces.slice(0, 40);
   const today = new Date().toISOString().slice(0, 10);
 
@@ -92,10 +114,10 @@ export default async function Image({
             color: "#8b8b96",
           }}
         >
-          <span style={{ color: "#ededf0" }}>
-            {`${page.backersToday} showed up today`}
-          </span>
-          <span>{`\u00b7 ${page.backersToday}\u00a2`}</span>
+          <span style={{ color: "#ededf0" }}>{`${count} ${window}`}</span>
+          {/* One cent per person per day, so today's count *is* the cents.
+              Over a week it is not, so the figure is simply omitted. */}
+          {useToday && <span>{`\u00b7 ${count}\u00a2`}</span>}
           {page.streakDays > 0 && (
             <span>{`\u00b7 streak ${page.streakDays}d`}</span>
           )}
@@ -153,6 +175,6 @@ export default async function Image({
         </div>
       </div>
     ),
-    size,
+    { ...size, headers: CACHE },
   );
 }

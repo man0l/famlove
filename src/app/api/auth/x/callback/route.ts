@@ -21,9 +21,11 @@ export async function GET(request: NextRequest) {
   const state = params.get("state");
   const expectedState = jar.get("x_state")?.value;
   const verifier = jar.get("x_verifier")?.value;
+  const next = jar.get("x_next")?.value;
 
   jar.delete("x_state");
   jar.delete("x_verifier");
+  jar.delete("x_next");
 
   if (!code || !state || !verifier || state !== expectedState) {
     return back("error=bad_state");
@@ -52,7 +54,10 @@ export async function GET(request: NextRequest) {
     });
 
     await createSession(userId);
-    return NextResponse.redirect(`${SITE_URL}/wallet`);
+    // Back to whatever they were trying to do, not a generic landing page.
+    const destination =
+      next && /^\/[a-zA-Z0-9/_-]*$/.test(next) ? next : "/wallet";
+    return NextResponse.redirect(`${SITE_URL}${destination}`);
   } catch {
     return back("error=x_failed");
   }
