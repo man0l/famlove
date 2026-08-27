@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { projectPage } from "@/lib/queries";
 import { initials } from "@/components/Face";
+import { SITE_URL } from "@/lib/config";
 
 export const alt = "The wall of everyone who showed up";
 
@@ -69,6 +70,23 @@ export default async function Image({
   const shown = faces.slice(0, 40);
   const today = new Date().toISOString().slice(0, 10);
 
+  /*
+   * satori fetches every <img> itself, from inside the worker, so a relative
+   * path is not a path to anything. Seeded avatars are served from our own
+   * /faces, real ones come from X as absolute URLs already.
+   *
+   * The extension swap is not cosmetic: satori has no WebP decoder. Handed a
+   * .webp it fetches it, fails to decode, and draws nothing at all — a silent
+   * hole in the grid, which reads worse than the grey initial it replaced.
+   * Every generated face therefore ships as a small .card.png alongside the
+   * WebP the site itself uses.
+   */
+  const absolute = (url: string | null): string | null => {
+    if (!url) return null;
+    const forCard = url.replace(/^(\/faces\/[^/]+)\.webp$/, "$1.card.png");
+    return forCard.startsWith("/") ? `${SITE_URL}${forCard}` : forCard;
+  };
+
   return new ImageResponse(
     (
       <div
@@ -100,6 +118,29 @@ export default async function Image({
             <div style={{ fontSize: 56, lineHeight: 1.05 }}>{page.project.name}</div>
             <div style={{ fontSize: 26, color: "#8b8b96", marginTop: 8 }}>
               {page.project.tagline.slice(0, 74)}
+            </div>
+            {/* The builder's own face, as the builder. Nobody shows up for
+                themselves — that is the one rule the board never bends — so
+                this is attribution, and it sits away from the wall to say so. */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                marginTop: 12,
+                fontSize: 24,
+                color: "#8b8b96",
+              }}
+            >
+              {absolute(page.project.ownerAvatar) && (
+                <img
+                  src={absolute(page.project.ownerAvatar)!}
+                  width={38}
+                  height={38}
+                  style={{ borderRadius: 999 }}
+                />
+              )}
+              <span>{`by @${page.project.ownerHandle}`}</span>
             </div>
           </div>
         </div>
@@ -134,10 +175,10 @@ export default async function Image({
           }}
         >
           {shown.map((face) =>
-            face.avatarUrl ? (
+            absolute(face.avatarUrl) ? (
               <img
                 key={face.handle}
-                src={face.avatarUrl}
+                src={absolute(face.avatarUrl)!}
                 width={68}
                 height={68}
                 style={{ borderRadius: 999 }}

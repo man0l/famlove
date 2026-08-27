@@ -183,15 +183,26 @@ export async function seedDatabase(sql) {
   const handles = [...new Set(HANDLES)].slice(0, 240);
   console.log(`seeding: ${handles.length} people…`);
 
+  /*
+   * Seeded accounts wear a generated face (scripts/generate-faces.mjs). They
+   * used to be created with avatar_url NULL, which meant every wall on the
+   * site — including the share card the whole product is built to produce —
+   * drew a grid of grey initials. The product is a grid of faces; a grid of
+   * initials is the same picture with the point removed.
+   */
+  const FACES = 33;
+  const face = (i) => `/faces/f${String((i % FACES) + 1).padStart(2, "0")}.webp`;
+
   const userIds = new Map();
   for (let i = 0; i < handles.length; i += 1) {
     const handle = handles[i];
     const ageDays = 60 + Math.floor(random() * 3000);
     const [row] = await sql`
       INSERT INTO users (x_id, handle, display_name, avatar_url, x_created_at, is_seed)
-      VALUES (${`seed:${handle}`}, ${handle}, ${handle}, NULL,
+      VALUES (${`seed:${handle}`}, ${handle}, ${handle}, ${face(i)},
               ${new Date(Date.now() - ageDays * 86_400_000).toISOString()}, TRUE)
-      ON CONFLICT (x_id) DO UPDATE SET handle = EXCLUDED.handle
+      ON CONFLICT (x_id) DO UPDATE
+        SET handle = EXCLUDED.handle, avatar_url = EXCLUDED.avatar_url
       RETURNING id
     `;
     userIds.set(handle, Number(row.id));

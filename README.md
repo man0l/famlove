@@ -255,7 +255,7 @@ so silence is the default.
 
 | Table | Columns that matter | Note |
 | --- | --- | --- |
-| `users` | `x_id`, `handle`, `x_created_at`, `banned_at` | X OAuth 2.0. Accounts under 30 days are rejected at the door. |
+| `users` | `x_id`, `handle`, `avatar_url`, `x_created_at`, `banned_at` | X OAuth 2.0. Accounts under 30 days are rejected at the door. Real accounts wear their X photo; seeded ones wear a generated face from `public/faces` (`scripts/generate-faces.mjs`) — the product is a grid of faces, and a grid of grey initials is the same picture with the point removed. |
 | `cards` | `user_id`, `stripe_fingerprint UNIQUE` | The sybil ledger. One card, one human. |
 | `wallets` | `cents_balance`, `cents_given`, `cents_topped_up` | Balance decrements in the same statement as the love insert. |
 | `projects` | `owner_id`, `slug`, `name`, `url`, `tagline`, `favicon_url`, `image_url` | As many per owner as you like — no cap, by design. Rank counts distinct backers, so a listing nobody shows up for ranks nowhere; abuse is handled by removal, not by a number. The icon and share image are read from the site's own meta tags when it is listed, shown in the form for correction, and re-read by `/api/cron/refresh-meta` (real listings only). |

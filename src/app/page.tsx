@@ -33,12 +33,20 @@ export default async function HomePage() {
 
   /*
    * The card a builder gets to post — showing a real one beats describing it.
-   * Pick the liveliest wall rather than simply rank #1: the top project can
-   * be having a quiet morning, and an example card with one face on it argues
-   * against listing rather than for it.
+   *
+   * It is pinned to one project rather than picked from the board. The hero's
+   * whole job is "list your thing", and a card that changes identity between
+   * visits reads as a screenshot of somebody else's product; the same card,
+   * every time, reads as the thing you are about to get. The fallback keeps
+   * the old behaviour — the liveliest wall, not simply rank #1, because the
+   * top project can be having a quiet morning and an example card with one
+   * face on it argues against listing rather than for it.
    */
+  const SHOWCASE_SLUG = "slashloop-dev";
   const showcase =
-    [...board].sort((a, b) => b.backersToday - a.backersToday)[0] ?? board[0];
+    board.find((entry) => entry.slug === SHOWCASE_SLUG) ??
+    [...board].sort((a, b) => b.backersToday - a.backersToday)[0] ??
+    board[0];
 
   return (
     <div className="mx-auto max-w-5xl px-4">

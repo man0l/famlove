@@ -18,6 +18,8 @@ import { fileURLToPath } from "node:url";
 import "dotenv/config";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
+// Sources out of public/, optimized output in. See scripts/generate-faces.mjs.
+const srcDir = path.join(root, "assets", "stickers");
 const outDir = path.join(root, "public", "stickers");
 
 const key = process.env.OPENAI_API_KEY;
@@ -121,7 +123,7 @@ async function generate(asset) {
   const b64 = json.data?.[0]?.b64_json;
   if (!b64) throw new Error(`${asset.name}: no image returned`);
 
-  const file = path.join(outDir, `${asset.name}.png`);
+  const file = path.join(srcDir, `${asset.name}.png`);
   await writeFile(file, Buffer.from(b64, "base64"));
   const kb = Math.round(Buffer.from(b64, "base64").length / 1024);
   console.log(`  ✓ ${asset.name}.png (${kb} KB)`);
@@ -131,11 +133,12 @@ const args = process.argv.slice(2);
 const force = args.includes("--force");
 const only = args.filter((a) => !a.startsWith("--"));
 
+await mkdir(srcDir, { recursive: true });
 await mkdir(outDir, { recursive: true });
 
 const queue = ASSETS.filter((a) => !only.length || only.includes(a.name));
 for (const asset of queue) {
-  const file = path.join(outDir, `${asset.name}.png`);
+  const file = path.join(srcDir, `${asset.name}.png`);
   if (!force && (await exists(file))) {
     console.log(`  · ${asset.name}.png exists, skipping`);
     continue;
@@ -166,7 +169,7 @@ const OPTIMIZE = {
 
 console.log("\noptimizing:");
 for (const [name, width] of Object.entries(OPTIMIZE)) {
-  const src = path.join(outDir, `${name}.png`);
+  const src = path.join(srcDir, `${name}.png`);
   if (!(await exists(src))) continue;
   const out = path.join(outDir, `${name}.webp`);
   await sharp(src)
