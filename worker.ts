@@ -21,37 +21,44 @@ export default {
   fetch: openNextWorker.fetch,
 
   /**
-   * 00:05 UTC: write yesterday's streaks and send the one email famlove has.
+   * 00:05 UTC: write yesterday's streaks, send the digests, open today's
+   * rallies and fire standing orders.
    *
-   * The work already exists as a route handler, so this calls it over the
-   * worker's own public URL rather than duplicating it — which is also why
-   * `global_fetch_strictly_public` is set in wrangler.jsonc.
+   * The work exists as a route handler, so this invokes that handler directly
+   * rather than fetching the worker's own public URL. The round trip it used
+   * to make was a real network request out of the worker and back in through
+   * the edge — DNS, TLS, a second worker invocation, and the secret travelling
+   * over the wire, every one of them a way for a job nobody is watching to
+   * fail silently. This job produced no rows at all in its first day of
+   * existence: no rollups, no emails, and so no rallies, which left the site
+   * telling owners "a rally opens itself each morning" while none ever did.
+   * Calling the handler in-process removes every one of those failure modes.
+   *
+   * It is awaited rather than left to waitUntil so an exception surfaces in
+   * the invocation's own logs instead of vanishing into a detached promise.
    */
   async scheduled(
     _controller: ScheduledController,
     env: Env,
     ctx: ExecutionContext,
   ): Promise<void> {
-    const base = env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
-    if (!base) {
-      console.error("[cron] NEXT_PUBLIC_SITE_URL is not set; skipping rollup");
-      return;
-    }
+    const base = env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "https://famlove.lol";
 
-    ctx.waitUntil(
-      (async () => {
-        try {
-          const res = await fetch(`${base}/api/cron/rollup`, {
-            headers: env.CRON_SECRET
-              ? { Authorization: `Bearer ${env.CRON_SECRET}` }
-              : {},
-          });
-          const body = await res.text();
-          console.log(`[cron] rollup ${res.status}: ${body.slice(0, 200)}`);
-        } catch (err) {
-          console.error("[cron] rollup failed:", err);
-        }
-      })(),
-    );
+    try {
+      const request = new Request(`${base}/api/cron/rollup`, {
+        headers: env.CRON_SECRET
+          ? { Authorization: `Bearer ${env.CRON_SECRET}` }
+          : {},
+      });
+      const res = await openNextWorker.fetch(request, env, ctx);
+      const body = await res.text();
+      console.log(`[cron] rollup ${res.status}: ${body.slice(0, 300)}`);
+      if (!res.ok) throw new Error(`rollup returned ${res.status}`);
+    } catch (err) {
+      // Rethrow: a thrown scheduled handler is recorded as a failed cron
+      // invocation, which is visible. A swallowed one looks like success.
+      console.error("[cron] rollup failed:", err);
+      throw err;
+    }
   },
 };

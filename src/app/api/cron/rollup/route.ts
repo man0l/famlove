@@ -175,16 +175,27 @@ export async function GET(request: NextRequest) {
      * would make the board look abandoned rather than busy. The goal is the
      * project's own best day plus a fifth, so it is always a stretch and
      * never an insult.
+     *
+     * The best day is counted from loves rather than read from daily_rollups.
+     * It used to INNER JOIN that table, which made opening a rally depend on
+     * a summary row having been written first — so any day the rollup step
+     * failed, or any project too new to have been rolled up, silently got no
+     * rally at all while the site kept promising owners that one opens every
+     * morning. loves is the source those rollups are derived from anyway, so
+     * this is the same number with one fewer thing to go wrong.
      */
     const opened = (await sql`
-      WITH active AS (
-        SELECT l.project_id,
-               MAX(d.backers) AS best
-        FROM loves l
-        JOIN daily_rollups d ON d.project_id = l.project_id
-          AND d.day_utc >= (now() AT TIME ZONE 'utc')::date - 7
-        WHERE l.day_utc >= (now() AT TIME ZONE 'utc')::date - 7
-        GROUP BY l.project_id
+      WITH daily AS (
+        SELECT project_id, day_utc,
+               COUNT(DISTINCT from_user_id) AS backers
+        FROM loves
+        WHERE day_utc >= (now() AT TIME ZONE 'utc')::date - 7
+        GROUP BY project_id, day_utc
+      ),
+      active AS (
+        SELECT project_id, MAX(backers) AS best
+        FROM daily
+        GROUP BY project_id
       )
       INSERT INTO rallies (project_id, starts_at, ends_at, goal)
       SELECT a.project_id,
