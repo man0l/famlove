@@ -1,5 +1,6 @@
 import { formatCents } from "@/lib/time";
 import { DAILY_CAP_PER_PROJECT, DAILY_GIVE_CEILING } from "@/lib/config";
+import { Confetti } from "./Confetti";
 
 /**
  * "RECEIPT · NOT A DONATION" is not a joke line — it's the product's legal
@@ -15,6 +16,7 @@ export function Receipt({
   backerNumber,
   rank,
   previousRank,
+  projectUrl,
 }: {
   projectName: string;
   ownerHandle: string;
@@ -24,11 +26,26 @@ export function Receipt({
   backerNumber: number;
   rank: number | null;
   previousRank: number | null;
+  projectUrl: string;
 }) {
   const moved = rank !== null && previousRank !== null && rank !== previousRank;
 
+  /*
+   * The backer's own version of the share loop. The project owner posts their
+   * wall; the person who showed up gets to post that they did — and the thing
+   * worth saying is the part money cannot buy: they were number N, and nobody
+   * can outrank them by spending more.
+   */
+  const shareText = encodeURIComponent(
+    `I just showed up for ${projectName} on famlove.lol — backer #${backerNumber}.\n\n` +
+      `One cent. Capped at one per person per day, so nobody can outspend me.\n\n` +
+      projectUrl,
+  );
+
   return (
-    <div className="receipt-edge land rounded-lg bg-paper px-5 py-4 text-ink shadow-[0_18px_50px_-20px_rgba(255,61,104,0.55)]">
+    <div className="relative">
+      <Confetti />
+      <div className="receipt-edge land rounded-lg bg-paper px-5 py-4 text-ink shadow-[0_18px_50px_-20px_rgba(255,61,104,0.55)]">
       <div className="flex items-baseline justify-between font-mono text-[10px] uppercase tracking-[0.18em] text-ink/55">
         <span>famlove.lol</span>
         <span>Receipt · not a donation</span>
@@ -87,6 +104,16 @@ export function Receipt({
         Your cent does not reach them. It buys your face on their wall.
         That is the entire product.
       </p>
+
+      <a
+        href={`https://x.com/intent/post?text=${shareText}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-4 block rounded-full bg-ink px-4 py-3 text-center font-mono text-xs font-semibold tracking-wide text-paper transition hover:bg-love"
+      >
+        Post that you showed up ↗
+      </a>
+      </div>
     </div>
   );
 }

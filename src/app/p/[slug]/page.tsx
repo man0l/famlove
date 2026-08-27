@@ -147,6 +147,7 @@ export default async function ProjectPage({ params, searchParams }: Params) {
             isOwner={Boolean(isOwner)}
             signedIn={Boolean(user)}
             rank={page.rank}
+            projectUrl={`${SITE_URL}/p/${slug}`}
           />
 
           {rally && (

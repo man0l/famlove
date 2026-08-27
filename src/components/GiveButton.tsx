@@ -32,6 +32,7 @@ export function GiveButton({
   isOwner,
   signedIn,
   rank,
+  projectUrl,
 }: {
   slug: string;
   projectName: string;
@@ -42,6 +43,7 @@ export function GiveButton({
   isOwner: boolean;
   signedIn: boolean;
   rank: number | null;
+  projectUrl: string;
 }) {
   const router = useRouter();
   const [state, setState] = useState<State>({ kind: "idle" });
@@ -84,6 +86,7 @@ export function GiveButton({
         backerNumber={state.backersToday}
         rank={state.rank}
         previousRank={state.previousRank}
+        projectUrl={projectUrl}
       />
     );
   }
