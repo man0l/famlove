@@ -2,6 +2,7 @@ import { ImageResponse } from "next/og";
 import { projectPage } from "@/lib/queries";
 import { initials } from "@/components/Face";
 import { SITE_URL } from "@/lib/config";
+import { inlineImages } from "@/lib/og-images";
 
 export const alt = "The wall of everyone who showed up";
 
@@ -71,20 +72,35 @@ export default async function Image({
   const today = new Date().toISOString().slice(0, 10);
 
   /*
-   * satori fetches every <img> itself, from inside the worker, so a relative
-   * path is not a path to anything. Seeded avatars are served from our own
-   * /faces, real ones come from X as absolute URLs already.
+   * Every avatar is fetched here and handed to satori as bytes.
    *
-   * The extension swap is not cosmetic: satori has no WebP decoder. Handed a
-   * .webp it fetches it, fails to decode, and draws nothing at all — a silent
-   * hole in the grid, which reads worse than the grey initial it replaced.
-   * Every generated face therefore ships as a small .card.png alongside the
-   * WebP the site itself uses.
+   * satori's own image loader does not work on workerd: the card rendered
+   * perfectly in local dev and came back with an empty grid in production —
+   * not just for our own /faces, but for pbs.twimg.com too, so it is the
+   * loader rather than a same-zone subrequest problem. Plain fetch from the
+   * worker is fine, which is what this does.
+   *
+   * The extension swap is not cosmetic either: satori has no WebP decoder.
+   * Handed a .webp it draws nothing at all — a silent hole in the grid, which
+   * reads worse than the grey initial it replaced. Every generated face
+   * therefore ships as a small .card.png beside the WebP the site itself
+   * uses.
    */
-  const absolute = (url: string | null): string | null => {
+  const forCard = (url: string | null): string | null => {
     if (!url) return null;
-    const forCard = url.replace(/^(\/faces\/[^/]+)\.webp$/, "$1.card.png");
-    return forCard.startsWith("/") ? `${SITE_URL}${forCard}` : forCard;
+    const swapped = url.replace(/^(\/faces\/[^/]+)\.webp$/, "$1.card.png");
+    return swapped.startsWith("/") ? `${SITE_URL}${swapped}` : swapped;
+  };
+
+  const wanted = [
+    ...shown.map((face) => forCard(face.avatarUrl)),
+    forCard(page.project.ownerAvatar),
+  ].filter((url): url is string => Boolean(url));
+
+  const inlined = await inlineImages(wanted);
+  const absolute = (url: string | null): string | null => {
+    const target = forCard(url);
+    return target ? (inlined.get(target) ?? null) : null;
   };
 
   return new ImageResponse(
