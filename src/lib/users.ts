@@ -9,8 +9,16 @@ export type UpsertArgs = {
   isSeed?: boolean;
 };
 
-/** Create or refresh a user and make sure they have a (possibly empty) jar. */
-export async function upsertUser(args: UpsertArgs): Promise<number> {
+/**
+ * Create or refresh a user and make sure they have a (possibly empty) jar.
+ *
+ * Also reports whether an email is still worth asking for — X never gives us
+ * one, so somebody signing in has either typed one in before, told us no, or
+ * has not been asked yet.
+ */
+export async function upsertUser(
+  args: UpsertArgs,
+): Promise<{ id: number; wantsEmail: boolean }> {
   const [row] = (await sql`
     INSERT INTO users (x_id, handle, display_name, avatar_url, x_created_at, is_seed)
     VALUES (${args.xId}, ${args.handle}, ${args.displayName},
@@ -19,14 +27,14 @@ export async function upsertUser(args: UpsertArgs): Promise<number> {
       SET handle       = EXCLUDED.handle,
           display_name = EXCLUDED.display_name,
           avatar_url   = EXCLUDED.avatar_url
-    RETURNING id
-  `) as { id: number }[];
+    RETURNING id, email, email_declined_at
+  `) as { id: number; email: string | null; email_declined_at: string | null }[];
 
   const id = Number(row.id);
   await sql`
     INSERT INTO wallets (user_id) VALUES (${id}) ON CONFLICT (user_id) DO NOTHING
   `;
-  return id;
+  return { id, wantsEmail: !row.email && !row.email_declined_at };
 }
 
 export function slugify(input: string): string {

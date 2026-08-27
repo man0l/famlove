@@ -168,3 +168,8 @@ CREATE TABLE IF NOT EXISTS email_sends (
 -- enforced where it can be counted". See MAX_PROJECTS_PER_USER.
 ALTER TABLE projects DROP CONSTRAINT IF EXISTS projects_owner_id_key;
 CREATE INDEX IF NOT EXISTS projects_owner ON projects (owner_id) WHERE removed_at IS NULL;
+
+-- Asked for an email at sign-in and told no. Recorded so the question is
+-- asked once rather than every time somebody signs in — an ask that repeats
+-- is a nag, and a nag is how people learn to distrust a product.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email_declined_at TIMESTAMPTZ;

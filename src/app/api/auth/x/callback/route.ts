@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     `) as { banned_at: string | null }[];
     if (banned[0]?.banned_at) return back("error=banned");
 
-    const userId = await upsertUser({
+    const { id: userId, wantsEmail } = await upsertUser({
       xId: profile.id,
       handle: profile.username,
       displayName: profile.name,
@@ -54,9 +54,23 @@ export async function GET(request: NextRequest) {
     });
 
     await createSession(userId);
+
     // Back to whatever they were trying to do, not a generic landing page.
     const destination =
       next && /^\/[a-zA-Z0-9/_-]*$/.test(next) ? next : "/wallet";
+
+    /*
+     * X hands over no email, so the only way famlove ever gets one is by
+     * asking. Ask here, once, while the person is already mid-flow — and
+     * carry their destination through, so saying yes or no both land them
+     * where they were going. Never a gate: somebody who came to spend a cent
+     * must be able to walk past it.
+     */
+    if (wantsEmail) {
+      return NextResponse.redirect(
+        `${SITE_URL}/welcome?next=${encodeURIComponent(destination)}`,
+      );
+    }
     return NextResponse.redirect(`${SITE_URL}${destination}`);
   } catch {
     return back("error=x_failed");

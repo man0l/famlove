@@ -23,11 +23,12 @@ export async function POST(request: NextRequest) {
   }
 
   const existing = (await sql`
-    SELECT id FROM users WHERE lower(handle) = lower(${handle})
-  `) as { id: number }[];
+    SELECT id, email, email_declined_at FROM users
+    WHERE lower(handle) = lower(${handle})
+  `) as { id: number; email: string | null; email_declined_at: string | null }[];
 
-  const userId = existing[0]
-    ? Number(existing[0].id)
+  const created = existing[0]
+    ? null
     : await upsertUser({
         xId: `dev:${handle.toLowerCase()}`,
         handle,
@@ -37,9 +38,21 @@ export async function POST(request: NextRequest) {
         isSeed: true,
       });
 
+  const userId = existing[0] ? Number(existing[0].id) : created!.id;
+  const wantsEmail = existing[0]
+    ? !existing[0].email && !existing[0].email_declined_at
+    : created!.wantsEmail;
+
   await createSession(userId);
   const next = String(form.get("next") ?? "/wallet");
-  return NextResponse.redirect(new URL(next, request.nextUrl.origin), {
+
+  // Mirror the X callback exactly. A local path that skips a step the real
+  // one takes is how a flow ships broken having been "tested".
+  const destination = wantsEmail
+    ? `/welcome?next=${encodeURIComponent(next)}`
+    : next;
+
+  return NextResponse.redirect(new URL(destination, request.nextUrl.origin), {
     status: 303,
   });
 }
