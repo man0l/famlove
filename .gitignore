@@ -9,4 +9,11 @@ next-env.d.ts
 .vercel
 .open-next/
 .wrangler/
-assets/
+# Ignore generated asset sources, but keep the full-resolution face masters
+# committed: a durable backup of the 33 avatars, which cannot be regenerated
+# without OpenAI credits. The raw 1024px PNGs stay ignored (42 MB); these q95
+# WebPs are visually identical at 4 MB and re-derive every shipped size.
+assets/*
+!assets/faces/
+assets/faces/*
+!assets/faces/*.webp

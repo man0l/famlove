@@ -216,8 +216,14 @@ let web = 0;
 let card = 0;
 for (let i = 0; i < PEOPLE.length; i += 1) {
   const name = `f${String(i + 1).padStart(2, "0")}`;
-  const src = path.join(srcDir, `${name}.png`);
-  if (!(await exists(src))) continue;
+  // Prefer the raw 1024px PNG, but fall back to the committed q95 WebP master
+  // (assets/faces/*.webp) — that archive is the durable copy, so the shipped
+  // sizes can be rebuilt from a fresh clone even after the PNGs are gone and
+  // the OpenAI account can no longer regenerate them.
+  const png = path.join(srcDir, `${name}.png`);
+  const master = path.join(srcDir, `${name}.webp`);
+  const src = (await exists(png)) ? png : (await exists(master)) ? master : null;
+  if (!src) continue;
 
   const webp = path.join(outDir, `${name}.webp`);
   await sharp(src).resize({ width: 160, height: 160, fit: "cover" })
