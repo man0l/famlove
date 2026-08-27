@@ -38,7 +38,11 @@ export async function POST(request: NextRequest) {
     throw err;
   }
 
-  return NextResponse.redirect(new URL(`/p/${slug}`, request.nextUrl.origin), {
-    status: 303,
-  });
+  // ?listed=1 arms the share launcher. The thirty seconds after listing is
+  // when a builder is most willing to ask their fam, and an empty wall is the
+  // worst state this product has.
+  return NextResponse.redirect(
+    new URL(`/p/${slug}?listed=1`, request.nextUrl.origin),
+    { status: 303 },
+  );
 }

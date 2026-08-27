@@ -9,6 +9,7 @@ import { currentUser } from "@/lib/session";
 import { RALLY_MIN_GOAL, SITE_URL } from "@/lib/config";
 import { Sticker } from "@/components/Sticker";
 import { XIcon } from "@/components/XIcon";
+import { ListedBanner } from "@/components/ListedBanner";
 
 export const dynamic = "force-dynamic";
 
@@ -45,8 +46,17 @@ export default async function ProjectPage({ params, searchParams }: Params) {
     `${page.backersToday} people spent a cent on ${project.name} today. Not one of them could spend two.\n\n${SITE_URL}/p/${slug}`,
   );
 
+  const justListed = query.listed === "1" && isOwner;
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
+      {justListed && (
+        <ListedBanner
+          projectName={project.name}
+          projectUrl={`${SITE_URL}/p/${slug}`}
+        />
+      )}
+
       <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
         <div>
           <div className="flex items-start gap-4">
@@ -93,8 +103,12 @@ export default async function ProjectPage({ params, searchParams }: Params) {
             {page.wallToday.length === 0 ? (
               <div className="py-10 text-center">
                 <Sticker name="hands" size={72} className="mx-auto" />
+                {/* The owner cannot be the first face — they are barred from
+                    their own wall — so telling them to be it is useless. */}
                 <p className="mt-3 text-mute">
-                  Nobody yet today. Be the first face on this wall.
+                  {isOwner
+                    ? "Nobody yet today. Send someone the link — you can't fill this one yourself."
+                    : "Nobody yet today. Be the first face on this wall."}
                 </p>
               </div>
             ) : (
