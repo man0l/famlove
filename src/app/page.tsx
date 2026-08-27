@@ -43,21 +43,24 @@ export default async function HomePage() {
           <div className="min-w-0">
             <p className="inline-flex items-center gap-2 rounded-full border border-love/30 bg-love/10 px-3.5 py-1.5 text-sm font-medium text-love-soft">
               <Sticker name="heart" size={16} />
-              Free to list · one project per person
+              Free to list · 30 seconds
             </p>
 
+            {/*
+              The original thesis line, restored. It earns the top of the page
+              because it states the whole mechanic in one breath — and the
+              mechanic *is* the pitch. Everything under it was doing the same
+              job a second time, so it is gone.
+            */}
             <h1 className="display mt-5 text-[2.6rem] sm:text-[3.4rem]">
-              Find out who actually
-              <br />
-              shows up for your app.
+              Rank isn&apos;t dollars. It&apos;s how many people spent a cent on
+              you today.
             </h1>
 
-            <p className="mt-5 max-w-xl text-lg leading-relaxed text-mute">
-              List your SaaS or side project and get a wall of the people who
-              backed it — each one a real human who spent exactly{" "}
-              <span className="text-chalk">one cent</span> to be there. Capped at
-              one per person per day, so nobody buys their way onto your wall and{" "}
-              <span className="text-chalk">nobody can outspend your friends.</span>
+            <p className="mt-5 max-w-lg text-lg leading-relaxed text-mute">
+              List your SaaS or app and get a wall of everyone who showed up.
+              One cent each, capped at one per person a day — so{" "}
+              <span className="text-chalk">nobody can buy their way past you.</span>
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -82,11 +85,6 @@ export default async function HomePage() {
                   : `Back someone else · ${formatCents(anchor.cents)}`}
               </Link>
             </div>
-
-            <p className="mt-4 text-sm text-mute">
-              Listing is free and takes about thirty seconds. One project per
-              person — which is why the board isn&apos;t full of noise.
-            </p>
           </div>
 
           {/*
@@ -107,7 +105,7 @@ export default async function HomePage() {
                 />
               </div>
               <figcaption className="mt-3 text-center text-sm text-mute">
-                This is the card you post. It&apos;s{" "}
+                The card you post —{" "}
                 <Link href={`/p/${showcase.slug}`} className="text-chalk hover:text-love">
                   {showcase.name}
                 </Link>

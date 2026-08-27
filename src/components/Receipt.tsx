@@ -1,6 +1,7 @@
 import { formatCents } from "@/lib/time";
 import { DAILY_CAP_PER_PROJECT, DAILY_GIVE_CEILING } from "@/lib/config";
 import { Confetti } from "./Confetti";
+import { XIcon } from "./XIcon";
 
 /**
  * "RECEIPT · NOT A DONATION" is not a joke line — it's the product's legal
@@ -109,9 +110,10 @@ export function Receipt({
         href={`https://x.com/intent/post?text=${shareText}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-4 block rounded-full bg-ink px-4 py-3 text-center font-mono text-xs font-semibold tracking-wide text-paper transition hover:bg-love"
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-ink px-4 py-3 font-mono text-xs font-semibold tracking-wide text-paper transition hover:bg-love"
       >
-        Post that you showed up ↗
+        <XIcon size={13} />
+        Post that you showed up
       </a>
       </div>
     </div>

@@ -8,6 +8,7 @@ import { projectPage } from "@/lib/queries";
 import { currentUser } from "@/lib/session";
 import { RALLY_MIN_GOAL, SITE_URL } from "@/lib/config";
 import { Sticker } from "@/components/Sticker";
+import { XIcon } from "@/components/XIcon";
 
 export const dynamic = "force-dynamic";
 
@@ -221,9 +222,10 @@ export default async function ProjectPage({ params, searchParams }: Params) {
             href={`https://x.com/intent/post?text=${shareText}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="block rounded-full border border-line px-4 py-3 text-center text-sm font-medium text-mute transition hover:border-line-2 hover:text-chalk"
+            className="flex items-center justify-center gap-2 rounded-full border border-line px-4 py-3 text-sm font-medium text-mute transition hover:border-line-2 hover:text-chalk"
           >
-            Post the wall ↗
+            <XIcon size={13} />
+            Post the wall
           </a>
         </aside>
       </div>
