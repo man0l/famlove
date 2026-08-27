@@ -86,16 +86,21 @@ const [cards] = await sql`
     SELECT stripe_fingerprint FROM cards GROUP BY 1 HAVING COUNT(*) > 1) t`;
 check("no card fingerprint is shared between accounts", Number(cards.dupes) === 0);
 
-// 8. A few projects per person, not unlimited.
-const MAX_PROJECTS = 5;
-const [projects] = await sql`
-  SELECT COALESCE(MAX(n), 0) AS most FROM (
-    SELECT owner_id, COUNT(*) AS n FROM projects WHERE removed_at IS NULL
-    GROUP BY 1) t`;
+// 8. Every project belongs to somebody who exists.
+//
+// This used to assert a cap of five per person. The cap is gone — listing is
+// unlimited, because volume buys no rank (rule 9 and the board both count
+// distinct backers, so an empty listing earns nothing). What still has to
+// hold is that a wall can name its owner: hard-deleting a user without their
+// projects would leave pages nobody can be credited for or complain to.
+const [orphans] = await sql`
+  SELECT COUNT(*) AS n FROM projects p
+  WHERE p.removed_at IS NULL
+    AND NOT EXISTS (SELECT 1 FROM users u WHERE u.id = p.owner_id)`;
 check(
-  `nobody owns more than ${MAX_PROJECTS} projects`,
-  Number(projects.most) <= MAX_PROJECTS,
-  `busiest builder has ${projects.most}`,
+  "every project has an owner who still exists",
+  Number(orphans.n) === 0,
+  `${orphans.n} orphaned`,
 );
 
 // 9. Nobody shows up for themselves.
