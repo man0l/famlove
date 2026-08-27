@@ -154,6 +154,31 @@ export async function seedDatabase(sql) {
   await sql`DELETE FROM users WHERE is_seed`;
   await sql`DELETE FROM expenses`;
 
+  /*
+   * Dropping seed projects cascades away every love placed on them —
+   * including cents spent by real people, whose wallets then claim to have
+   * given more than the loves that exist. Re-seeding must not quietly
+   * confiscate somebody's money, so anything a real account spent on fixture
+   * data is returned to their jar and their counter re-aligned.
+   */
+  const [refunded] = await sql`
+    UPDATE wallets w
+    SET cents_balance = w.cents_balance + (w.cents_given - a.actual),
+        cents_given   = a.actual,
+        updated_at    = now()
+    FROM (
+      SELECT w2.user_id,
+             COALESCE((SELECT COUNT(*) FROM loves l
+                        WHERE l.from_user_id = w2.user_id), 0) AS actual
+      FROM wallets w2
+      JOIN users u ON u.id = w2.user_id
+      WHERE u.is_seed = false
+    ) a
+    WHERE a.user_id = w.user_id AND w.cents_given <> a.actual
+    RETURNING w.user_id
+  `.then((rows) => [rows.length]);
+  if (refunded) console.log(`seeding: returned cents to ${refunded} real wallet(s)`);
+
   // ---- people -------------------------------------------------------------
   const handles = [...new Set(HANDLES)].slice(0, 240);
   console.log(`seeding: ${handles.length} people…`);
@@ -213,7 +238,7 @@ export async function seedDatabase(sql) {
       INSERT INTO projects (owner_id, slug, name, url, tagline)
       VALUES (${owners[i]}, ${slug}, ${name},
               ${`https://${slug.replace(/-/g, "")}.com`}, ${tagline})
-      ON CONFLICT (owner_id) DO UPDATE SET name = EXCLUDED.name
+      ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name
       RETURNING id, slug
     `;
     projects.push({ id: Number(row.id), slug: row.slug, ownerIndex: i });

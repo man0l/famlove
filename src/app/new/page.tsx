@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { currentUser } from "@/lib/session";
 import { sql } from "@/lib/db";
+import Link from "next/link";
 import { Sticker } from "@/components/Sticker";
+import { MAX_PROJECTS_PER_USER } from "@/lib/config";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "List a project" };
@@ -16,9 +18,11 @@ export default async function NewProjectPage({
   if (!user) redirect("/join?next=%2Fnew");
 
   const existing = (await sql`
-    SELECT slug FROM projects WHERE owner_id = ${user.id} AND removed_at IS NULL
-  `) as { slug: string }[];
-  if (existing[0]) redirect(`/p/${existing[0].slug}`);
+    SELECT slug, name FROM projects
+    WHERE owner_id = ${user.id} AND removed_at IS NULL ORDER BY id
+  `) as { slug: string; name: string }[];
+  // Only bounce them when there is genuinely no room left.
+  if (existing.length >= MAX_PROJECTS_PER_USER) redirect(`/p/${existing[0].slug}`);
 
   const query = await searchParams;
 
@@ -29,9 +33,30 @@ export default async function NewProjectPage({
         <Sticker name="receipt" size={70} float="slow" className="shrink-0" />
       </div>
       <p className="mt-3 text-mute">
-        One per person, for now. Fewer listings, fewer spam walls, and a board
-        where every row is somebody&apos;s actual thing.
+        Up to {MAX_PROJECTS_PER_USER} each — enough for everything you actually
+        ship, few enough that the board stays things people made rather than
+        things people listed.
       </p>
+
+      {existing.length > 0 && (
+        <div className="card mt-5 p-4">
+          <p className="text-xs font-medium text-mute">
+            You already have {existing.length} of {MAX_PROJECTS_PER_USER}
+          </p>
+          <ul className="mt-2 flex flex-wrap gap-2">
+            {existing.map((project) => (
+              <li key={project.slug}>
+                <Link
+                  href={`/p/${project.slug}`}
+                  className="block rounded-full border border-line px-3.5 py-1.5 text-sm text-mute transition hover:border-love hover:text-love"
+                >
+                  {project.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {query.error && (
         <p className="mt-5 rounded-2xl border border-love/40 bg-love/10 px-4 py-3 text-sm text-love-soft">

@@ -97,9 +97,11 @@ CREATE TABLE IF NOT EXISTS rallies (
   goal        INTEGER     NOT NULL CHECK (goal > 0),
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
--- One rally per project per ISO week.
-CREATE UNIQUE INDEX IF NOT EXISTS one_rally_per_week
-  ON rallies (project_id, (date_trunc('week', starts_at AT TIME ZONE 'UTC')));
+-- Rallies are one per project per UTC day and open themselves; the index
+-- that guards them is created further down, where that change is recorded.
+-- (This file is applied top to bottom on every migrate, so a definition
+-- superseded later must not be re-created here — it would rebuild an index
+-- the current data deliberately violates.)
 
 -- The honesty page. Income is computed from topups; this is the other side.
 CREATE TABLE IF NOT EXISTS expenses (
@@ -156,3 +158,13 @@ CREATE TABLE IF NOT EXISTS email_sends (
   sent_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   PRIMARY KEY (user_id, kind, day_utc, ref)
 );
+
+-- ---------------------------------------------------------------------------
+-- More than one project per builder.
+-- ---------------------------------------------------------------------------
+-- owner_id was UNIQUE, which meant a person shipping three things could show
+-- exactly one of them. The limit stays — an uncapped board fills with spam
+-- listings — but it moves from "one, enforced by an index" to "a few,
+-- enforced where it can be counted". See MAX_PROJECTS_PER_USER.
+ALTER TABLE projects DROP CONSTRAINT IF EXISTS projects_owner_id_key;
+CREATE INDEX IF NOT EXISTS projects_owner ON projects (owner_id) WHERE removed_at IS NULL;

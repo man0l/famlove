@@ -62,19 +62,31 @@ export default async function ProfilePage({ params }: Params) {
         </p>
       </section>
 
-      {page.project && (
-        <section className="card card-hover mt-4 p-5">
-          <p className="text-xs font-medium text-mute">Their project</p>
-          <Link
-            href={`/p/${page.project.slug}`}
-            className="mt-2 block transition hover:text-love"
-          >
-            <span className="display text-xl">{page.project.name}</span>
-            <span className="block text-sm text-mute">{page.project.tagline}</span>
-          </Link>
-          <p className="tabular mt-2 text-sm text-mute">
-            {page.project.backers7d} people showed up this week
+      {page.projects.length > 0 && (
+        <section className="card mt-4 p-5">
+          <p className="text-xs font-medium text-mute">
+            {page.projects.length === 1 ? "Their project" : "Their projects"}
           </p>
+          <ul className="mt-2 space-y-3">
+            {page.projects.map((project) => (
+              <li key={project.slug}>
+                <Link
+                  href={`/p/${project.slug}`}
+                  className="flex items-baseline justify-between gap-4 transition hover:text-love"
+                >
+                  <span className="min-w-0">
+                    <span className="display block text-xl">{project.name}</span>
+                    <span className="block truncate text-sm text-mute">
+                      {project.tagline}
+                    </span>
+                  </span>
+                  <span className="tabular shrink-0 text-sm text-mute">
+                    {project.backers7d} this week
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 

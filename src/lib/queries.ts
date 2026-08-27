@@ -585,7 +585,7 @@ export type ProfilePage = {
   gave: number;
   received: number;
   giveStreak: number;
-  project: { slug: string; name: string; tagline: string; backers7d: number } | null;
+  projects: { slug: string; name: string; tagline: string; backers7d: number }[];
   wallsThisWeek: { slug: string; name: string; at: string }[];
   balance: number | null;
 };
@@ -632,6 +632,7 @@ export async function profilePage(
                AND l.day_utc >= (now() AT TIME ZONE 'utc')::date - ${BOARD_WINDOW_DAYS - 1}::int
            ) AS backers_7d
     FROM projects p WHERE p.owner_id = ${userId} AND p.removed_at IS NULL
+    ORDER BY backers_7d DESC, p.id
   `) as Record<string, unknown>[];
 
   const walls = (await sql`
@@ -652,14 +653,12 @@ export async function profilePage(
     received: Number(agg?.received ?? 0),
     giveStreak: Number(agg?.give_streak ?? 0),
     balance: viewerId === userId ? Number(row.balance ?? 0) : null,
-    project: projectRows[0]
-      ? {
-          slug: String(projectRows[0].slug),
-          name: String(projectRows[0].name),
-          tagline: String(projectRows[0].tagline ?? ""),
-          backers7d: Number(projectRows[0].backers_7d ?? 0),
-        }
-      : null,
+    projects: projectRows.map((row) => ({
+      slug: String(row.slug),
+      name: String(row.name),
+      tagline: String(row.tagline ?? ""),
+      backers7d: Number(row.backers_7d ?? 0),
+    })),
     wallsThisWeek: walls
       .map((r) => ({
         slug: String(r.slug),

@@ -16,8 +16,15 @@ export const BOARD_WINDOW_DAYS = 7;
 export const MIN_X_ACCOUNT_AGE_DAYS = 30;
 export const MIN_X_POSTS = 1;
 
-/** Max one project per user in v1. Enforced by a UNIQUE on projects.owner_id. */
-export const MAX_PROJECTS_PER_USER = 1;
+/**
+ * How many things one person may list.
+ *
+ * It was one, enforced by a UNIQUE on projects.owner_id, which meant a
+ * builder shipping three products could show exactly one of them. A cap is
+ * still needed — uncapped, the board fills with spam listings and stops being
+ * a board — but it belongs at a number a real person might reach, not at one.
+ */
+export const MAX_PROJECTS_PER_USER = 5;
 
 export type TierId = "hook" | "default" | "patron";
 

@@ -86,12 +86,17 @@ const [cards] = await sql`
     SELECT stripe_fingerprint FROM cards GROUP BY 1 HAVING COUNT(*) > 1) t`;
 check("no card fingerprint is shared between accounts", Number(cards.dupes) === 0);
 
-// 8. One project per person.
+// 8. A few projects per person, not unlimited.
+const MAX_PROJECTS = 5;
 const [projects] = await sql`
-  SELECT COUNT(*) AS dupes FROM (
-    SELECT owner_id FROM projects WHERE removed_at IS NULL
-    GROUP BY 1 HAVING COUNT(*) > 1) t`;
-check("no user owns two projects", Number(projects.dupes) === 0);
+  SELECT COALESCE(MAX(n), 0) AS most FROM (
+    SELECT owner_id, COUNT(*) AS n FROM projects WHERE removed_at IS NULL
+    GROUP BY 1) t`;
+check(
+  `nobody owns more than ${MAX_PROJECTS} projects`,
+  Number(projects.most) <= MAX_PROJECTS,
+  `busiest builder has ${projects.most}`,
+);
 
 // 9. Nobody shows up for themselves.
 const [self] = await sql`

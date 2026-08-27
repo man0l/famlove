@@ -46,8 +46,15 @@ async function Header() {
     ? ((await sql`
         SELECT slug FROM projects
         WHERE owner_id = ${user.id} AND removed_at IS NULL
-      `) as { slug: string }[])[0]
-    : undefined;
+        ORDER BY id
+      `) as { slug: string }[])
+    : [];
+
+  // One project links straight to its wall; several link to the profile,
+  // which is the only page that lists them all.
+  const wallsHref =
+    mine.length === 1 ? `/p/${mine[0].slug}` : `/u/${user?.handle ?? ""}`;
+  const wallsLabel = mine.length === 1 ? "Your wall" : "Your walls";
 
   return (
     <header className="sticky top-0 z-30 border-b border-line/60 bg-ink/75 backdrop-blur-xl">
@@ -67,9 +74,9 @@ async function Header() {
             <NavLink href="/">Loved</NavLink>
             <NavLink href="/rising">Rising</NavLink>
             <NavLink href="/givers">Givers</NavLink>
-            {mine && (
-              <NavLink href={`/p/${mine.slug}`}>
-                <span className="text-love">Your wall</span>
+            {mine.length > 0 && (
+              <NavLink href={wallsHref}>
+                <span className="text-love">{wallsLabel}</span>
               </NavLink>
             )}
           </nav>
@@ -113,9 +120,9 @@ async function Header() {
           <NavLink href="/">Loved</NavLink>
           <NavLink href="/rising">Rising</NavLink>
           <NavLink href="/givers">Givers</NavLink>
-          {mine ? (
-            <NavLink href={`/p/${mine.slug}`}>
-              <span className="text-love">Your wall</span>
+          {mine.length > 0 ? (
+            <NavLink href={wallsHref}>
+              <span className="text-love">{wallsLabel}</span>
             </NavLink>
           ) : (
             <NavLink href="/cents">Cents</NavLink>
