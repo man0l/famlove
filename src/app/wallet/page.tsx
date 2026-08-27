@@ -38,6 +38,9 @@ export default async function WalletPage({
   }
 
   const given = await givenToday(user.id);
+  const [mine] = (await sql`
+    SELECT slug FROM projects WHERE owner_id = ${user.id} AND removed_at IS NULL
+  `) as { slug: string }[];
   const topups = (await sql`
     SELECT provider, tier, gross_cents, granted_cents, status, created_at
     FROM topups WHERE user_id = ${user.id}
@@ -265,8 +268,11 @@ export default async function WalletPage({
       </section>
 
       <div className="mt-10 flex items-center justify-between text-sm text-mute">
-        <Link href="/new" className="font-medium transition hover:text-chalk">
-          List your project →
+        <Link
+          href={mine ? `/p/${mine.slug}` : "/new"}
+          className="font-medium transition hover:text-chalk"
+        >
+          {mine ? "Your wall →" : "List your project →"}
         </Link>
         <form action="/api/auth/logout" method="post">
           <button type="submit" className="transition hover:text-chalk">

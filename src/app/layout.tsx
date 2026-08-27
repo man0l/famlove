@@ -5,6 +5,7 @@ import "./globals.css";
 import { DAILY_GIVE_CEILING, SITE_URL } from "@/lib/config";
 import { currentUser } from "@/lib/session";
 import { givenToday } from "@/lib/queries";
+import { sql } from "@/lib/db";
 import { Sticker } from "@/components/Sticker";
 
 const bricolage = Bricolage_Grotesque({
@@ -35,6 +36,19 @@ async function Header() {
   const user = await currentUser();
   const given = user ? await givenToday(user.id) : 0;
 
+  /*
+   * A builder who lists a project then browses away had no way back to it:
+   * the wall lived at a slug they never typed, linked from nowhere. It goes
+   * in the header, because "where is my thing" is a question the top of the
+   * page should always answer.
+   */
+  const mine = user
+    ? ((await sql`
+        SELECT slug FROM projects
+        WHERE owner_id = ${user.id} AND removed_at IS NULL
+      `) as { slug: string }[])[0]
+    : undefined;
+
   return (
     <header className="sticky top-0 z-30 border-b border-line/60 bg-ink/75 backdrop-blur-xl">
       <div className="mx-auto max-w-5xl px-4">
@@ -53,6 +67,11 @@ async function Header() {
             <NavLink href="/">Loved</NavLink>
             <NavLink href="/rising">Rising</NavLink>
             <NavLink href="/givers">Givers</NavLink>
+            {mine && (
+              <NavLink href={`/p/${mine.slug}`}>
+                <span className="text-love">Your wall</span>
+              </NavLink>
+            )}
           </nav>
 
           <div className="ml-auto flex shrink-0 items-center gap-2">
@@ -73,6 +92,14 @@ async function Header() {
                 >
                   @{user.handle}
                 </Link>
+                <form action="/api/auth/logout" method="post">
+                  <button
+                    type="submit"
+                    className="whitespace-nowrap rounded-full border border-line px-2.5 py-1.5 text-xs text-mute transition hover:border-line-2 hover:text-chalk sm:px-3 sm:text-sm"
+                  >
+                    Sign out
+                  </button>
+                </form>
               </>
             ) : (
               <Link href="/join" className="btn-love px-4 py-2 text-sm font-semibold">
@@ -82,11 +109,24 @@ async function Header() {
           </div>
         </div>
 
-        <nav className="-mx-1 flex items-center gap-1 pb-2 text-sm font-medium text-mute sm:hidden">
+        <nav className="-mx-1 flex items-center gap-1 overflow-x-auto pb-2 text-sm font-medium text-mute sm:hidden">
           <NavLink href="/">Loved</NavLink>
           <NavLink href="/rising">Rising</NavLink>
           <NavLink href="/givers">Givers</NavLink>
-          <NavLink href="/cents">Cents</NavLink>
+          {mine ? (
+            <NavLink href={`/p/${mine.slug}`}>
+              <span className="text-love">Your wall</span>
+            </NavLink>
+          ) : (
+            <NavLink href="/cents">Cents</NavLink>
+          )}
+          {user && (
+            <>
+              {/* "You" rather than the handle: a long one pushes Sign out past
+                  the right edge, behind a horizontal scroll nobody guesses at. */}
+              <NavLink href={`/u/${user.handle}`}>You</NavLink>
+            </>
+          )}
         </nav>
       </div>
     </header>
@@ -97,7 +137,7 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
   return (
     <Link
       href={href}
-      className="rounded-full px-2.5 py-1.5 transition hover:bg-ink-2 hover:text-chalk sm:px-3"
+      className="whitespace-nowrap rounded-full px-2.5 py-1.5 transition hover:bg-ink-2 hover:text-chalk sm:px-3"
     >
       {children}
     </Link>

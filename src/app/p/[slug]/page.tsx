@@ -57,8 +57,15 @@ export default async function ProjectPage({ params, searchParams }: Params) {
         />
       )}
 
+      {/*
+        Explicit placement rather than source order, because the two differ.
+        On a phone this stacks header → the button → the wall → everything
+        else, so the thing you came to do is above the fold. On a wide screen
+        the same four blocks form two columns, and the aside content rejoins
+        under the button where it belongs.
+      */}
       <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
-        <div>
+        <div className="lg:col-start-1 lg:row-start-1">
           <div className="flex items-start gap-4">
             <span
               className={`tabular display grid h-14 w-14 shrink-0 place-items-center rounded-2xl text-xl ${
@@ -88,8 +95,36 @@ export default async function ProjectPage({ params, searchParams }: Params) {
               </p>
             </div>
           </div>
+        </div>
 
-          <section className="card mt-8 p-5">
+        <div className="lg:col-start-2 lg:row-start-1 lg:sticky lg:top-20 lg:self-start">
+          <GiveButton
+            slug={slug}
+            projectName={project.name}
+            ownerHandle={project.ownerHandle}
+            viewerHandle={user?.handle ?? null}
+            viewerBalance={user?.centsBalance ?? 0}
+            lovedToday={page.viewerLovedToday}
+            isOwner={Boolean(isOwner)}
+            signedIn={Boolean(user)}
+            rank={page.rank}
+            projectUrl={`${SITE_URL}/p/${slug}`}
+            autoLoves={page.viewerAutoLoves}
+          />
+
+          {rally && (
+            <div className="mt-4">
+              <RallyBar
+                goal={rally.goal}
+                progress={rally.progress}
+                endsAt={rally.endsAt}
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="lg:col-start-1 lg:row-start-2">
+          <section className="card p-5">
             <header className="flex flex-wrap items-baseline justify-between gap-2">
               <h2 className="display text-2xl">Showed up today</h2>
               <p className="tabular text-sm text-mute">
@@ -151,25 +186,7 @@ export default async function ProjectPage({ params, searchParams }: Params) {
           )}
         </div>
 
-        <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-          <GiveButton
-            slug={slug}
-            projectName={project.name}
-            ownerHandle={project.ownerHandle}
-            viewerHandle={user?.handle ?? null}
-            viewerBalance={user?.centsBalance ?? 0}
-            lovedToday={page.viewerLovedToday}
-            isOwner={Boolean(isOwner)}
-            signedIn={Boolean(user)}
-            rank={page.rank}
-            projectUrl={`${SITE_URL}/p/${slug}`}
-            autoLoves={page.viewerAutoLoves}
-          />
-
-          {rally && (
-            <RallyBar goal={rally.goal} progress={rally.progress} endsAt={rally.endsAt} />
-          )}
-
+        <aside className="space-y-4 lg:col-start-2 lg:row-start-2">
           {isOwner && !rally && (
             <form
               action="/api/rally"
