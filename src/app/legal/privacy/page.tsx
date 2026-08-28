@@ -67,7 +67,12 @@ export default function PrivacyPage() {
             [
               "Automatically",
               "a signed session cookie",
-              "To keep you logged in. It holds your account id and nothing else. No analytics, no advertising, no third-party trackers, no cookie banner.",
+              "To keep you logged in. It holds your account id and nothing else. No advertising and no ad tracking, ever.",
+            ],
+            [
+              "Automatically",
+              "anonymous usage measurement",
+              "Google Analytics, to count visits and see which pages get read. It runs with consent defaulted to denied, which is its cookieless mode: no analytics cookie is set, no identifier is stored on your device, and your IP is truncated. That is also why this site has no cookie banner to click through.",
             ],
           ]}
         />
@@ -104,8 +109,9 @@ export default function PrivacyPage() {
           rows={[
             ["Stripe", "payments and tax calculation", "Ireland / United States"],
             ["Neon", "the database", "United States"],
-            ["Vercel", "hosting", "United States"],
+            ["Cloudflare", "hosting and delivery", "United States / global edge"],
             ["Resend", "the one email, if you opt in", "United States"],
+            ["Google", "anonymous usage measurement, cookieless", "United States"],
             ["Upstash", "rate limiting, if enabled", "United States"],
           ]}
         />

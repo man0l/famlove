@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Script from "next/script";
 import { Bricolage_Grotesque, Inter } from "next/font/google";
 import "./globals.css";
 import { DAILY_GIVE_CEILING, SITE_URL } from "@/lib/config";
@@ -175,6 +176,48 @@ function Footer() {
   );
 }
 
+/**
+ * Google Analytics.
+ *
+ * afterInteractive, not beforeInteractive: nothing on the page waits on it,
+ * and a measurement script has no business competing with the wall for the
+ * first paint.
+ *
+ * Consent Mode is set to denied before the tag loads. That is not decoration
+ * — famlove is an EU trader selling to consumers, and under the ePrivacy
+ * rules analytics cookies need consent *before* they are set, not after. With
+ * these defaults GA runs in its cookieless mode: no analytics cookie, no
+ * client id stored, pings that carry no identifier. It still answers "how many
+ * people came and what did they look at", which is what a tag is for at this
+ * stage, and it does it without the site needing a banner it currently
+ * promises not to have. Granting consent later is a call to gtag('consent',
+ * 'update', …) from whatever banner gets built.
+ */
+function Analytics() {
+  const id = process.env.NEXT_PUBLIC_GA_ID;
+  if (!id) return null;
+  return (
+    <>
+      <Script
+        src={`https://www.googletagmanager.com/gtag/js?id=${id}`}
+        strategy="afterInteractive"
+      />
+      <Script id="ga-init" strategy="afterInteractive">
+        {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('consent', 'default', {
+  ad_storage: 'denied',
+  ad_user_data: 'denied',
+  ad_personalization: 'denied',
+  analytics_storage: 'denied'
+});
+gtag('js', new Date());
+gtag('config', '${id}', { anonymize_ip: true });`}
+      </Script>
+    </>
+  );
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -184,6 +227,7 @@ export default function RootLayout({
         <Header />
         <main>{children}</main>
         <Footer />
+        <Analytics />
       </body>
     </html>
   );
