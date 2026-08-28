@@ -23,7 +23,15 @@
   // when `opennextjs-cloudflare build` runs — it is also read at runtime by
   // the scheduled handler in worker.ts.
   "vars": {
-    "NEXT_PUBLIC_SITE_URL": "https://famlove.lol"
+    "NEXT_PUBLIC_SITE_URL": "https://famlove.lol",
+    // Adds a required "I agree to the Terms of Service" tick-box to Checkout,
+    // and has Stripe record the acceptance with a timestamp. Displaying the
+    // immediate-supply notice is not the same as capturing agreement, and for
+    // an EU trader selling to consumers that record is the cheapest defence a
+    // chargeback ever meets. Requires the Terms URL to be set in Stripe's
+    // Checkout settings first — with it missing, requiring acceptance makes
+    // session creation fail outright and checkout simply stops opening.
+    "STRIPE_TOS_CONSENT": "1"
   },
   // The real domain, not <account>.workers.dev. Wrangler creates the DNS
   // record on the zone. workers.dev is off so the account-subdomain URL — and
