@@ -82,10 +82,16 @@ export type XProfile = {
   email: string | null;
 };
 
+export type XToken = {
+  accessToken: string;
+  /** What X actually granted, which is not always what was asked for. */
+  scopes: string[];
+};
+
 export async function exchangeCode(
   code: string,
   verifier: string,
-): Promise<string> {
+): Promise<XToken> {
   const basic = Buffer.from(
     `${process.env.X_CLIENT_ID}:${process.env.X_CLIENT_SECRET}`,
   ).toString("base64");
@@ -123,9 +129,20 @@ export async function exchangeCode(
     }
     throw new XAuthError(code);
   }
-  const json = (await res.json()) as { access_token?: string };
+  const json = (await res.json()) as { access_token?: string; scope?: string };
   if (!json.access_token) throw new XAuthError("no_token");
-  return json.access_token;
+  /*
+   * The granted scope is worth keeping. X will happily reissue a token on an
+   * existing authorisation without showing the consent screen again, which
+   * means a newly-requested scope can simply be missing — and an address that
+   * never arrives looks identical whether the scope was refused, the app is
+   * not approved for it, or the account has no confirmed address. This tells
+   * those apart.
+   */
+  return {
+    accessToken: json.access_token,
+    scopes: (json.scope ?? "").split(/\s+/).filter(Boolean),
+  };
 }
 
 export async function fetchProfile(accessToken: string): Promise<XProfile> {

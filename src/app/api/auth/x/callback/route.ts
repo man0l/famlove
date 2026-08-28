@@ -32,8 +32,19 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const token = await exchangeCode(code, verifier);
-    const profile = await fetchProfile(token);
+    const { accessToken, scopes } = await exchangeCode(code, verifier);
+    const profile = await fetchProfile(accessToken);
+
+    /*
+     * Visible in the worker logs, because three different failures all look
+     * like "no email arrived": the scope was not granted (X reissued an old
+     * authorisation), the app is not approved to request it, or the account
+     * simply has no confirmed address.
+     */
+    console.log(
+      `[x-auth] @${profile.username} scopes=${scopes.join(",") || "none"} ` +
+        `email=${profile.email ? "received" : "none"}`,
+    );
 
     const gate = gateProfile(profile);
     if (!gate.ok) {
