@@ -11,6 +11,11 @@ import { possessive } from "./mention";
  * They live together so the second one can't quietly become a worse version
  * of the first: the share is the whole distribution loop, and losing it when
  * the receipt goes is losing the loop.
+ *
+ * Neither writes "famlove.lol" in the prose. X auto-links any bare domain,
+ * and it unfurls the first link in a post — so a post that said "on
+ * famlove.lol" and then linked the project got the homepage's card instead
+ * of the project's wall. The link at the end is the only URL these contain.
  */
 export function showedUpPost({
   subject,
@@ -24,8 +29,8 @@ export function showedUpPost({
   backerNumber?: number;
 }): string {
   const opener = backerNumber
-    ? `I just showed up for ${subject} on famlove.lol — backer #${backerNumber}.`
-    : `I showed up for ${subject} on famlove.lol today.`;
+    ? `I just showed up for ${subject} on famlove — backer #${backerNumber}.`
+    : `I showed up for ${subject} on famlove today.`;
   return (
     `${opener}\n\n` +
     `One cent. Capped at one per person per day, so nobody can outspend me.\n\n` +

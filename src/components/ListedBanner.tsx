@@ -28,7 +28,9 @@ export function ListedBanner({
   const [copied, setCopied] = useState(false);
 
   const post = encodeURIComponent(
-    `I just listed ${projectName} on famlove.lol 🩷\n\n` +
+    // No bare domain in the prose: X links it and unfurls that first link
+    // instead of the project below.
+    `I just listed ${projectName} on famlove 🩷\n\n` +
       `It ranks by how many people show up, not how much they spend — ` +
       `1¢ each, capped at one per person a day. You can't buy your way up, ` +
       `you can only be shown up for.\n\n` +

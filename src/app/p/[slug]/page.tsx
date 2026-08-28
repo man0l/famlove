@@ -62,7 +62,7 @@ export default async function ProjectPage({ params, searchParams }: Params) {
     // "0 people showed up for you today" is worse than not posting at all.
     // So a bare wall shares as an ask instead of a count.
     (page.backersToday === 0
-      ? `${subject} is on famlove.lol and nobody has shown up today. It costs a cent, capped at one per person a day — you can't buy your way up there, you can only be shown up for.`
+      ? `Nobody has shown up for ${subject} today. It costs a cent, capped at one per person a day — you can't buy your way up there, you can only be shown up for.`
       : `${plural(page.backersToday, "person", "people")} spent a cent on ${subject} today. Not one of them could spend two.`) +
       `\n\n${SITE_URL}/p/${slug}`,
   );
