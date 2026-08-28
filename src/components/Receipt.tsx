@@ -3,6 +3,7 @@ import { DAILY_CAP_PER_PROJECT, DAILY_GIVE_CEILING } from "@/lib/config";
 import { Confetti } from "./Confetti";
 import { XIcon } from "./XIcon";
 import { AutoLoveToggle } from "./AutoLoveToggle";
+import { possessive } from "@/lib/mention";
 
 /**
  * "RECEIPT · NOT A DONATION" is not a joke line — it's the product's legal
@@ -12,6 +13,7 @@ import { AutoLoveToggle } from "./AutoLoveToggle";
 export function Receipt({
   projectName,
   ownerHandle,
+  ownerTag,
   viewerHandle,
   balance,
   givenToday,
@@ -24,6 +26,8 @@ export function Receipt({
 }: {
   projectName: string;
   ownerHandle: string;
+  /** The owner's X @-mention, or null when they can't be tagged. */
+  ownerTag: string | null;
   viewerHandle: string;
   balance: number;
   givenToday: number;
@@ -41,9 +45,12 @@ export function Receipt({
    * wall; the person who showed up gets to post that they did — and the thing
    * worth saying is the part money cannot buy: they were number N, and nobody
    * can outrank them by spending more.
+   *
+   * The owner gets tagged, because a post about showing up for someone that
+   * doesn't reach them is a post that does the one thing it was for.
    */
   const shareText = encodeURIComponent(
-    `I just showed up for ${projectName} on famlove.lol — backer #${backerNumber}.\n\n` +
+    `I just showed up for ${possessive(ownerTag, projectName)} on famlove.lol — backer #${backerNumber}.\n\n` +
       `One cent. Capped at one per person per day, so nobody can outspend me.\n\n` +
       projectUrl,
   );

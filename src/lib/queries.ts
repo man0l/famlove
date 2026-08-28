@@ -273,6 +273,8 @@ export type Project = {
   ownerId: number;
   ownerHandle: string;
   ownerAvatar: string | null;
+  /** Seeded owners carry invented handles — never @-mention one. */
+  ownerIsSeed: boolean;
   createdAt: string;
 };
 
@@ -302,7 +304,8 @@ export async function projectBySlug(slug: string): Promise<Project | null> {
   const rows = (await sql`
     SELECT p.id, p.slug, p.name, p.tagline, p.url, p.created_at,
            p.favicon_url, p.image_url, p.clicks,
-           p.owner_id, u.handle AS owner_handle, u.avatar_url AS owner_avatar
+           p.owner_id, u.handle AS owner_handle, u.avatar_url AS owner_avatar,
+           u.is_seed AS owner_is_seed
     FROM projects p
     JOIN users u ON u.id = p.owner_id
     WHERE p.slug = ${slug} AND p.removed_at IS NULL
@@ -321,6 +324,7 @@ export async function projectBySlug(slug: string): Promise<Project | null> {
     ownerId: Number(row.owner_id),
     ownerHandle: String(row.owner_handle),
     ownerAvatar: (row.owner_avatar as string | null) ?? null,
+    ownerIsSeed: row.owner_is_seed === true,
     createdAt: isoTime(row.created_at),
   };
 }

@@ -12,6 +12,7 @@ import { Sticker } from "@/components/Sticker";
 import { XIcon } from "@/components/XIcon";
 import { ProjectMark } from "@/components/ProjectMark";
 import { plural } from "@/lib/time";
+import { ownerMention, possessive } from "@/lib/mention";
 import { ListedBanner } from "@/components/ListedBanner";
 import { EmailPrompt } from "@/components/EmailPrompt";
 
@@ -46,8 +47,24 @@ export default async function ProjectPage({ params, searchParams }: Params) {
 
   const { project, rally } = page;
   const isOwner = user?.id === project.ownerId;
+  // Tagging the owner is what closes the loop — a post that names them but
+  // doesn't notify them reaches everyone except the one person it's about.
+  // `ownerTag` is whether this owner can be tagged at all; `mention` is
+  // whether *this* viewer's post should, since owners don't tag themselves.
+  const ownerTag = ownerMention(project.ownerHandle, {
+    isSeed: project.ownerIsSeed,
+    viewerIsOwner: false,
+  });
+  const mention = isOwner ? null : ownerTag;
+  const subject = possessive(mention, project.name);
   const shareText = encodeURIComponent(
-    `${page.backersToday} people spent a cent on ${project.name} today. Not one of them could spend two.\n\n${SITE_URL}/p/${slug}`,
+    // An empty wall has nothing to boast about, and tagging someone into
+    // "0 people showed up for you today" is worse than not posting at all.
+    // So a bare wall shares as an ask instead of a count.
+    (page.backersToday === 0
+      ? `${subject} is on famlove.lol and nobody has shown up today. It costs a cent, capped at one per person a day — you can't buy your way up there, you can only be shown up for.`
+      : `${plural(page.backersToday, "person", "people")} spent a cent on ${subject} today. Not one of them could spend two.`) +
+      `\n\n${SITE_URL}/p/${slug}`,
   );
 
   const justListed = query.listed === "1" && isOwner;
@@ -159,6 +176,7 @@ export default async function ProjectPage({ params, searchParams }: Params) {
             slug={slug}
             projectName={project.name}
             ownerHandle={project.ownerHandle}
+            ownerTag={ownerTag}
             viewerHandle={user?.handle ?? null}
             viewerBalance={user?.centsBalance ?? 0}
             lovedToday={page.viewerLovedToday}

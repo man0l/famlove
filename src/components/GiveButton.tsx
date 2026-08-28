@@ -27,6 +27,7 @@ export function GiveButton({
   slug,
   projectName,
   ownerHandle,
+  ownerTag,
   viewerHandle,
   viewerBalance,
   lovedToday,
@@ -39,6 +40,8 @@ export function GiveButton({
   slug: string;
   projectName: string;
   ownerHandle: string;
+  /** The owner's X @-mention, or null when they can't be tagged. */
+  ownerTag: string | null;
   viewerHandle: string | null;
   viewerBalance: number;
   lovedToday: boolean;
@@ -83,6 +86,7 @@ export function GiveButton({
       <Receipt
         projectName={projectName}
         ownerHandle={ownerHandle}
+        ownerTag={ownerTag}
         viewerHandle={viewerHandle ?? "you"}
         balance={state.balance}
         givenToday={state.givenToday}
