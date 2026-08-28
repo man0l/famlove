@@ -38,6 +38,10 @@ async function load(url: string): Promise<Response> {
 export async function inlineImages(
   urls: string[],
   notes?: string[],
+  /** Skip anything larger than this. Our own faces are known-small; a
+   *  stranger's og:image is whatever they felt like uploading, and a 12MB
+   *  hero has to be dropped rather than base64'd into the card. */
+  maxBytes?: number,
 ): Promise<Map<string, string>> {
   const out = new Map<string, string>();
   await Promise.all(
@@ -50,7 +54,17 @@ export async function inlineImages(
         }
         const type = res.headers.get("content-type") ?? "image/png";
         if (!type.startsWith("image/")) return;
+        const declared = Number(res.headers.get("content-length") ?? 0);
+        if (maxBytes && declared > maxBytes) {
+          notes?.push(`${short(url)}: ${declared}B too big`);
+          return;
+        }
         const bytes = new Uint8Array(await res.arrayBuffer());
+        // Content-Length lies, or is absent on a chunked response.
+        if (maxBytes && bytes.length > maxBytes) {
+          notes?.push(`${short(url)}: ${bytes.length}B too big`);
+          return;
+        }
         let binary = "";
         const CHUNK = 0x8000;
         for (let i = 0; i < bytes.length; i += CHUNK) {

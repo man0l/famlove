@@ -1,9 +1,10 @@
 import { formatCents } from "@/lib/time";
 import { DAILY_CAP_PER_PROJECT, DAILY_GIVE_CEILING } from "@/lib/config";
 import { Confetti } from "./Confetti";
-import { XIcon } from "./XIcon";
 import { AutoLoveToggle } from "./AutoLoveToggle";
+import { ShareOnX } from "./ShareOnX";
 import { possessive } from "@/lib/mention";
+import { showedUpPost } from "@/lib/share";
 
 /**
  * "RECEIPT · NOT A DONATION" is not a joke line — it's the product's legal
@@ -49,11 +50,11 @@ export function Receipt({
    * The owner gets tagged, because a post about showing up for someone that
    * doesn't reach them is a post that does the one thing it was for.
    */
-  const shareText = encodeURIComponent(
-    `I just showed up for ${possessive(ownerTag, projectName)} on famlove.lol — backer #${backerNumber}.\n\n` +
-      `One cent. Capped at one per person per day, so nobody can outspend me.\n\n` +
-      projectUrl,
-  );
+  const shareText = showedUpPost({
+    subject: possessive(ownerTag, projectName),
+    url: projectUrl,
+    backerNumber,
+  });
 
   return (
     <div className="relative">
@@ -127,15 +128,11 @@ export function Receipt({
         />
       </div>
 
-      <a
-        href={`https://x.com/intent/post?text=${shareText}`}
-        target="_blank"
-        rel="noopener noreferrer"
+      <ShareOnX
+        text={shareText}
+        label="Post that you showed up"
         className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-ink px-4 py-3 font-mono text-xs font-semibold tracking-wide text-paper transition hover:bg-love"
-      >
-        <XIcon size={13} />
-        Post that you showed up
-      </a>
+      />
       </div>
     </div>
   );

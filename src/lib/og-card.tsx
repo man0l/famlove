@@ -29,6 +29,8 @@ export type CardData = {
   streakDays: number;
   dateLabel: string;
   faces: Face[];
+  /** The project's own og:image, when its site publishes one. */
+  projectImage: string | null;
 };
 
 /*
@@ -38,6 +40,20 @@ export type CardData = {
  * over as bytes. The extension swap matters too: satori has no WebP decoder,
  * so generated faces ship a .card.png beside the .webp the site uses.
  */
+/*
+ * satori decodes PNG, JPEG and GIF. Anything else — WebP, AVIF, SVG — draws
+ * as an empty box, and a lot of sites now serve exactly those from og:image.
+ * Better no thumbnail than a hole where one should be.
+ */
+const DRAWABLE = /^data:image\/(png|jpeg|jpg|gif)/i;
+
+/** A stranger's hero image is whatever they uploaded; ours are not. */
+const MAX_PROJECT_IMAGE = 3_000_000;
+
+/** 1.91:1 is the OpenGraph aspect nearly every one of these is authored at,
+ *  and this height is the text block's, so the thumbnail costs no rows. */
+const THUMB = { width: 273, height: 143 };
+
 function forCard(url: string | null): string | null {
   if (!url) return null;
   const swapped = url.replace(/^(\/faces\/[^/]+)\.webp$/, "$1.card.png");
@@ -54,11 +70,21 @@ export async function renderCard(data: CardData): Promise<ImageResponse> {
     forCard(data.ownerAvatar),
   ].filter((url): url is string => Boolean(url));
 
-  const inlined = await inlineImages(wanted);
+  // Fetched apart from the faces so one slow or enormous third-party host
+  // cannot hold up, or size-cap, the wall that is the point of the card.
+  const [inlined, heroes] = await Promise.all([
+    inlineImages(wanted),
+    data.projectImage
+      ? inlineImages([data.projectImage], undefined, MAX_PROJECT_IMAGE)
+      : Promise.resolve(new Map<string, string>()),
+  ]);
   const absolute = (url: string | null): string | null => {
     const target = forCard(url);
     return target ? (inlined.get(target) ?? null) : null;
   };
+
+  const heroRaw = data.projectImage ? (heroes.get(data.projectImage) ?? null) : null;
+  const hero = heroRaw && DRAWABLE.test(heroRaw) ? heroRaw : null;
 
   return new ImageResponse(
     (
@@ -83,14 +109,26 @@ export async function renderCard(data: CardData): Promise<ImageResponse> {
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "flex-end", gap: 20, marginTop: 18 }}>
+        <div style={{ display: "flex", alignItems: "flex-end", gap: 28, marginTop: 18 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "flex-end",
+              gap: 20,
+              flex: 1,
+              minWidth: 0,
+              overflow: "hidden",
+            }}
+          >
           <div style={{ fontSize: 78, color: "#ff3d68", lineHeight: 1 }}>
             {data.rank ? `#${data.rank}` : "—"}
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 56, lineHeight: 1.05 }}>{data.name}</div>
             <div style={{ fontSize: 26, color: "#8b8b96", marginTop: 8 }}>
-              {data.tagline.slice(0, 74)}
+              {/* The thumbnail takes the right quarter of the row, so the
+                  tagline has to give it back or the two collide. */}
+              {data.tagline.slice(0, hero ? 50 : 74)}
             </div>
             {/* The builder's own face, as the builder. Nobody shows up for
                 themselves, so this is attribution, set apart from the wall. */}
@@ -115,6 +153,24 @@ export async function renderCard(data: CardData): Promise<ImageResponse> {
               <span>{`by @${data.ownerHandle}`}</span>
             </div>
           </div>
+          </div>
+
+          {/* What the project actually looks like, from its own og:image.
+              Secondary by design: the wall below is the thing being posted,
+              this is only the thing being posted about. */}
+          {hero && (
+            <img
+              src={hero}
+              width={THUMB.width}
+              height={THUMB.height}
+              style={{
+                flexShrink: 0,
+                borderRadius: 14,
+                objectFit: "cover",
+                border: "1px solid #23232c",
+              }}
+            />
+          )}
         </div>
 
         <div

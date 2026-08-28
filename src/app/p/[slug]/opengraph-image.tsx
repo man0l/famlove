@@ -62,5 +62,6 @@ export default async function Image({
     streakDays: page.streakDays,
     dateLabel: new Date().toISOString().slice(0, 10),
     faces: useToday ? page.wallToday : page.wall7d,
+    projectImage: page.project.imageUrl,
   });
 }

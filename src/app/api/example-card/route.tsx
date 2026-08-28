@@ -52,5 +52,6 @@ export async function GET() {
     streakDays: 0,
     dateLabel: "an example",
     faces: card.faces,
+    projectImage: card.imageUrl,
   });
 }

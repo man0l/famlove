@@ -151,9 +151,12 @@ export async function fetchSiteMeta(raw: string): Promise<SiteMeta | null> {
   }
 
   const icons: { href: string; size: number; apple: boolean }[] = [];
+  // Pre-OpenGraph, and still emitted by a lot of CMS themes.
+  let linkImage: string | null = null;
   for (const tag of head.match(/<link\b[^>]*>/gi) ?? []) {
     const a = attrs(tag);
     const rel = (a.rel ?? "").toLowerCase();
+    if (/\bimage_src\b/.test(rel) && !linkImage) linkImage = absolute(a.href, base);
     if (!/\b(icon|shortcut icon|apple-touch-icon|apple-touch-icon-precomposed)\b/.test(rel)) {
       continue;
     }
@@ -180,8 +183,24 @@ export async function fetchSiteMeta(raw: string): Promise<SiteMeta | null> {
   );
   const description =
     meta["og:description"] ?? meta["twitter:description"] ?? meta.description ?? null;
+  /*
+   * Every place a site might have put its picture, best first. og:image is
+   * the one that matters; the rest are what sites that never got around to
+   * OpenGraph still emit — `image` covers <meta itemprop="image">, since the
+   * map above keys itemprop alongside property and name.
+   */
   const image =
-    absolute(meta["og:image"] ?? meta["og:image:url"] ?? meta["twitter:image"], base);
+    absolute(
+      meta["og:image"] ??
+        meta["og:image:url"] ??
+        meta["og:image:secure_url"] ??
+        meta["twitter:image"] ??
+        meta["twitter:image:src"] ??
+        meta["image"] ??
+        meta["thumbnail"] ??
+        null,
+      base,
+    ) ?? linkImage;
 
   let favicon: string | null = icons[0]?.href ?? null;
   if (!favicon) {

@@ -443,6 +443,7 @@ export type ShowcaseCard = {
   rank: number | null;
   ownerHandle: string;
   ownerAvatar: string | null;
+  imageUrl: string | null;
   backers: number;
   faces: Face[];
 };
@@ -482,6 +483,7 @@ export async function showcaseCard(
     rank,
     ownerHandle: project.ownerHandle,
     ownerAvatar: project.ownerAvatar,
+    imageUrl: project.imageUrl,
     backers: Number(stat?.backers ?? 0),
     faces: wall.map((r) => ({
       handle: String(r.handle),

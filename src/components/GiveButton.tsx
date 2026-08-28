@@ -4,6 +4,9 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Receipt } from "./Receipt";
 import { AutoLoveToggle } from "./AutoLoveToggle";
+import { ShareOnX } from "./ShareOnX";
+import { possessive } from "@/lib/mention";
+import { showedUpPost } from "@/lib/share";
 
 type State =
   | { kind: "idle" }
@@ -100,6 +103,14 @@ export function GiveButton({
     );
   }
 
+  /*
+   * The state that outlives the receipt.
+   *
+   * The share used to live only on the receipt, which exists for the seconds
+   * after the cent lands and is gone on the next page load — so the one action
+   * that spreads this thing was the one action you couldn't come back to. It
+   * belongs here too, where it lasts the rest of the day.
+   */
   if (lovedToday) {
     return (
       <div>
@@ -109,6 +120,14 @@ export function GiveButton({
             That&apos;s your one. Resets at 00:00 UTC — and no, you can&apos;t
             buy another.
           </p>
+          <ShareOnX
+            text={showedUpPost({
+              subject: possessive(ownerTag, projectName),
+              url: projectUrl,
+            })}
+            label="Post that you showed up"
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-love px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-love/85"
+          />
         </div>
         <div className="mt-3">
           <AutoLoveToggle
