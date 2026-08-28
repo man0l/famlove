@@ -55,3 +55,9 @@ export function isoTime(value: unknown): string {
   const parsed = new Date(String(value ?? ""));
   return Number.isNaN(parsed.getTime()) ? "" : parsed.toISOString();
 }
+
+/** "1 click", "2 clicks". A site that counts for a living should count in
+    grammar too. */
+export function plural(n: number, one: string, many = `${one}s`): string {
+  return `${n.toLocaleString("en-US")} ${n === 1 ? one : many}`;
+}

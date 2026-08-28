@@ -29,6 +29,8 @@ export type BoardEntry = {
   url: string;
   /** The site's own icon, read from its meta tags when it was listed. */
   faviconUrl: string | null;
+  /** Outbound clicks counted by /go/[slug]. */
+  clicks: number;
   ownerHandle: string;
   backers: number;
   backersToday: number;
@@ -46,7 +48,8 @@ export type BoardEntry = {
 export async function lovedBoard(limit = 50): Promise<BoardEntry[]> {
   const rows = (await sql`
     WITH ranked AS (
-      SELECT p.id, p.slug, p.name, p.tagline, p.url, p.favicon_url, u.handle AS owner_handle,
+      SELECT p.id, p.slug, p.name, p.tagline, p.url, p.favicon_url, p.clicks,
+             u.handle AS owner_handle,
              COUNT(DISTINCT l.from_user_id) AS backers,
              COUNT(DISTINCT l.from_user_id) FILTER (
                WHERE l.day_utc = (now() AT TIME ZONE 'utc')::date
@@ -94,6 +97,7 @@ function toBoardEntry(row: Record<string, unknown>, i: number): BoardEntry {
     tagline: String(row.tagline ?? ""),
     url: String(row.url),
     faviconUrl: (row.favicon_url as string | null) ?? null,
+    clicks: Number(row.clicks ?? 0),
     ownerHandle: String(row.owner_handle),
     backers: Number(row.backers ?? 0),
     backersToday: Number(row.backers_today ?? 0),
@@ -155,7 +159,8 @@ export async function risingBoard(limit = 50): Promise<RisingEntry[]> {
       GROUP BY project_id
     ),
     ranked AS (
-      SELECT p.id, p.slug, p.name, p.tagline, p.url, p.favicon_url, u.handle AS owner_handle,
+      SELECT p.id, p.slug, p.name, p.tagline, p.url, p.favicon_url, p.clicks,
+             u.handle AS owner_handle,
              t.c AS backers_today,
              COALESCE(pr.avg_c, 0) AS average,
              t.c / GREATEST(COALESCE(pr.avg_c, 0), 0.5) AS multiplier,
@@ -257,6 +262,7 @@ export type Project = {
   url: string;
   faviconUrl: string | null;
   imageUrl: string | null;
+  clicks: number;
   ownerId: number;
   ownerHandle: string;
   ownerAvatar: string | null;
@@ -288,7 +294,7 @@ export type ProjectPage = {
 export async function projectBySlug(slug: string): Promise<Project | null> {
   const rows = (await sql`
     SELECT p.id, p.slug, p.name, p.tagline, p.url, p.created_at,
-           p.favicon_url, p.image_url,
+           p.favicon_url, p.image_url, p.clicks,
            p.owner_id, u.handle AS owner_handle, u.avatar_url AS owner_avatar
     FROM projects p
     JOIN users u ON u.id = p.owner_id
@@ -304,6 +310,7 @@ export async function projectBySlug(slug: string): Promise<Project | null> {
     url: String(row.url),
     faviconUrl: (row.favicon_url as string | null) ?? null,
     imageUrl: (row.image_url as string | null) ?? null,
+    clicks: Number(row.clicks ?? 0),
     ownerId: Number(row.owner_id),
     ownerHandle: String(row.owner_handle),
     ownerAvatar: (row.owner_avatar as string | null) ?? null,
@@ -673,6 +680,7 @@ export type ProfilePage = {
     name: string;
     tagline: string;
     faviconUrl: string | null;
+    clicks: number;
     backers7d: number;
   }[];
   wallsThisWeek: { slug: string; name: string; at: string }[];
@@ -715,7 +723,7 @@ export async function profilePage(
   `) as Record<string, unknown>[];
 
   const projectRows = (await sql`
-    SELECT p.slug, p.name, p.tagline, p.favicon_url,
+    SELECT p.slug, p.name, p.tagline, p.favicon_url, p.clicks,
            (SELECT COUNT(DISTINCT l.from_user_id) FROM loves l
              WHERE l.project_id = p.id
                AND l.day_utc >= (now() AT TIME ZONE 'utc')::date - ${BOARD_WINDOW_DAYS - 1}::int
@@ -747,6 +755,7 @@ export async function profilePage(
       name: String(row.name),
       tagline: String(row.tagline ?? ""),
       faviconUrl: (row.favicon_url as string | null) ?? null,
+      clicks: Number(row.clicks ?? 0),
       backers7d: Number(row.backers_7d ?? 0),
     })),
     wallsThisWeek: walls

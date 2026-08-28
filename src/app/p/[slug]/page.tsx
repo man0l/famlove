@@ -11,6 +11,7 @@ import { RALLY_MIN_GOAL, SITE_URL } from "@/lib/config";
 import { Sticker } from "@/components/Sticker";
 import { XIcon } from "@/components/XIcon";
 import { ProjectMark } from "@/components/ProjectMark";
+import { plural } from "@/lib/time";
 import { ListedBanner } from "@/components/ListedBanner";
 import { EmailPrompt } from "@/components/EmailPrompt";
 
@@ -119,14 +120,24 @@ export default async function ProjectPage({ params, searchParams }: Params) {
                   @{project.ownerHandle}
                 </Link>
                 <span className="text-line">·</span>
+                {/* Through /go so the visit is counted — the counter cannot
+                    see a link that points straight at somebody else's domain. */}
                 <a
-                  href={project.url}
+                  href={`/go/${slug}`}
                   target="_blank"
                   rel="noopener noreferrer nofollow"
                   className="truncate hover:text-chalk"
                 >
                   {new URL(project.url).hostname}
                 </a>
+                {project.clicks > 0 && (
+                  <>
+                    <span className="text-line">·</span>
+                    <span className="tabular">
+                      {plural(project.clicks, "click")}
+                    </span>
+                  </>
+                )}
               </p>
             </div>
           </div>

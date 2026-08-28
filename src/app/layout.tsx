@@ -10,6 +10,7 @@ import { sql } from "@/lib/db";
 import { Sticker } from "@/components/Sticker";
 import { ConsentBanner } from "@/components/ConsentBanner";
 import { siteTraffic } from "@/lib/datafast";
+import { plural } from "@/lib/time";
 
 const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
@@ -154,38 +155,57 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
   );
 }
 
-/** The public DataFast dashboard — the numbers below are checkable there. */
+/** The public DataFast dashboard — the numbers are checkable there. */
 const STATS_URL = "https://datafa.st/share/6a91807d731087339eee56a4";
 
 /**
  * Live traffic, stated plainly and linked to the dashboard that proves it.
  *
- * Zeroes are omitted rather than printed. "0 online · 0 visitors" is worse
- * than silence on a site that has just opened, and this product's whole
- * argument is that a number you can check beats a number you are told — so
- * the link stays even before there is anything to count.
+ * A pill above the fold rather than a line in the footer, because it is
+ * doing the same job as the rest of the page: this product's argument is
+ * that a number you can go and check beats a number you are told, and a
+ * claim about traffic buried under the terms links is a claim nobody
+ * checks.
+ *
+ * Zeroes are omitted rather than printed. "0 online · 0 visitors" reads
+ * worse than silence on a site that opened this week, so the counts appear
+ * as they earn themselves while the link is there from the start.
  */
-async function TrafficLine() {
+async function TrafficPill() {
   const traffic = await siteTraffic();
   if (!traffic) return null;
 
   const n = (value: number) => value.toLocaleString("en-US");
-  const parts: string[] = [];
-  if (traffic.online > 0) parts.push(`${n(traffic.online)} online`);
-  if (traffic.visitors > 0) parts.push(`${n(traffic.visitors)} visitors`);
 
   return (
-    <p className="text-sm text-mute">
-      {parts.length > 0 && <span>{parts.join(" · ")} · </span>}
-      <a
-        href={STATS_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="transition hover:text-chalk"
-      >
-        see stats →
-      </a>
-    </p>
+    <div className="flex justify-center px-4 pt-6">
+      <div className="inline-flex items-center gap-2 rounded-full border border-line bg-ink-2/70 px-4 py-1.5 text-sm text-mute">
+        {traffic.online > 0 && (
+          <>
+            <span
+              aria-hidden
+              className="h-2 w-2 rounded-full bg-lime shadow-[0_0_8px_var(--color-lime)]"
+            />
+            <span className="font-medium text-lime">{n(traffic.online)} online</span>
+            <span className="text-line">·</span>
+          </>
+        )}
+        {traffic.visitors > 0 && (
+          <>
+            <span>{plural(traffic.visitors, "visitor")}</span>
+            <span className="text-line">·</span>
+          </>
+        )}
+        <a
+          href={STATS_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="transition hover:text-chalk"
+        >
+          see stats →
+        </a>
+      </div>
+    </div>
   );
 }
 
@@ -193,15 +213,10 @@ function Footer() {
   return (
     <footer className="mt-24 border-t border-line/60">
       <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-10 sm:flex-row sm:items-center">
-        <div className="max-w-sm">
-          <p className="text-sm text-mute">
-            Your cent does not reach them. It buys your face on their wall.
-            That is the entire product.
-          </p>
-          <div className="mt-2">
-            <TrafficLine />
-          </div>
-        </div>
+        <p className="max-w-sm text-sm text-mute">
+          Your cent does not reach them. It buys your face on their wall.
+          That is the entire product.
+        </p>
         <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-mute sm:ml-auto">
           <Link href="/cents" className="transition hover:text-chalk">
             Where the cents go
@@ -265,6 +280,7 @@ export default function RootLayout({
     <html lang="en" className={`${bricolage.variable} ${inter.variable}`}>
       <body className="min-h-dvh">
         <Header />
+        <TrafficPill />
         <main>{children}</main>
         <Footer />
         <Analytics />

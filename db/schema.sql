@@ -185,3 +185,13 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS email_declined_at TIMESTAMPTZ;
 -- falls back to the tinted initial it always had.
 ALTER TABLE projects ADD COLUMN IF NOT EXISTS favicon_url TEXT;
 ALTER TABLE projects ADD COLUMN IF NOT EXISTS image_url TEXT;
+
+-- ---------------------------------------------------------------------------
+-- Outbound clicks per project.
+-- ---------------------------------------------------------------------------
+-- A plain counter, not a row per click. The interesting number is "did anyone
+-- go and look at the thing", and famlove has no use for who or when — storing
+-- a visit log to render one integer would be collecting personal data for
+-- decoration. Incremented by /go/[slug], which is also what stops the count
+-- being whatever a crawler felt like doing to the raw outbound link.
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS clicks BIGINT NOT NULL DEFAULT 0;

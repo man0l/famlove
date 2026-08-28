@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { FaceRow } from "./Face";
 import { ProjectMark } from "./ProjectMark";
+import { plural } from "@/lib/time";
 import type { BoardEntry } from "@/lib/queries";
 
 export function BoardRow({
@@ -42,6 +43,11 @@ export function BoardRow({
           <span className="mt-0.5 block truncate text-sm text-mute">
             {entry.tagline}
           </span>
+          {entry.clicks > 0 && (
+            <span className="mt-0.5 block text-xs text-mute/80">
+              {plural(entry.clicks, "click")}
+            </span>
+          )}
         </span>
 
         <span className="hidden md:block">
