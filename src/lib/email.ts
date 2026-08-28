@@ -1,5 +1,6 @@
 import { SITE_URL } from "./config";
 import { sql } from "./db";
+import { unsubscribeUrl } from "./unsubscribe";
 
 /**
  * famlove sends three emails and no others.
@@ -59,8 +60,11 @@ async function send(args: {
   to: string;
   subject: string;
   html: string;
+  /** Whose mail this is, so the message can carry its own unsubscribe. */
+  unsubscribe: string;
 }): Promise<boolean> {
   if (!emailConfigured) return false;
+  const { unsubscribe, ...mail } = args;
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -68,7 +72,21 @@ async function send(args: {
         Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ from: FROM, ...args }),
+      body: JSON.stringify({
+        from: FROM,
+        ...mail,
+        /*
+         * RFC 8058. These are what put the native "Unsubscribe" button next
+         * to the sender name in Gmail and Apple Mail — the one people
+         * actually use. Without them the alternative people reach for is the
+         * spam button, which costs the sending domain far more than a lost
+         * subscriber.
+         */
+        headers: {
+          "List-Unsubscribe": `<${unsubscribe}>`,
+          "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        },
+      }),
     });
     if (!res.ok) console.error("[email]", res.status, await res.text());
     return res.ok;
@@ -80,7 +98,7 @@ async function send(args: {
 
 /* ------------------------------------------------------------------ layout */
 
-const shell = (body: string) => `
+const shell = (body: string, unsubscribe: string) => `
 <div style="background:#0c0a12;padding:28px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
   <div style="max-width:520px;margin:0 auto;background:#16131f;border:1px solid #2e2740;border-radius:22px;padding:28px">
     <p style="margin:0 0 18px;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#ff3d68">
@@ -89,8 +107,8 @@ const shell = (body: string) => `
     ${body}
     <p style="margin:28px 0 0;font-size:12px;color:#6f6885;line-height:1.6">
       You get this because you added your address on famlove.
-      <a href="${SITE_URL}/wallet" style="color:#9b93ad">Clear the field</a>
-      to stop, any time. Every cent we take is listed at
+      <a href="${unsubscribe}" style="color:#9b93ad;text-decoration:underline">Unsubscribe</a>
+      any time. Every cent we take is listed at
       <a href="${SITE_URL}/cents" style="color:#9b93ad">${SITE_URL.replace(/^https?:\/\//, "")}/cents</a>.
     </p>
   </div>
@@ -132,7 +150,9 @@ export async function sendFirstBackerOfDay(args: {
   if (!emailConfigured) return false;
   if (!(await claim(args.ownerId, "showed-up", args.day, args.slug))) return false;
 
+  const unsubscribe = await unsubscribeUrl(args.ownerId);
   const ok = await send({
+    unsubscribe,
     to: args.to,
     subject: `@${args.backerHandle} showed up for ${args.projectName}`,
     html: shell(
@@ -143,6 +163,7 @@ export async function sendFirstBackerOfDay(args: {
         ) +
         p(`Everyone else who shows up today lands in tonight's digest.`) +
         button(`${SITE_URL}/p/${args.slug}`, "See your wall"),
+      unsubscribe,
     ),
   });
   if (!ok) await release(args.ownerId, "showed-up", args.day, args.slug);
@@ -170,7 +191,9 @@ export async function sendOwnerDigest(args: {
       ? `1 person showed up for ${args.projectName}`
       : `${args.count} people showed up for ${args.projectName}`;
 
+  const unsubscribe = await unsubscribeUrl(args.ownerId);
   const ok = await send({
+    unsubscribe,
     to: args.to,
     subject,
     html: shell(
@@ -186,6 +209,7 @@ export async function sendOwnerDigest(args: {
           `<br>Worth posting — the card updates itself, so it always shows who ` +
             `actually turned up.`,
         ),
+      unsubscribe,
     ),
   });
   if (!ok) await release(args.ownerId, "owner-digest", args.day, args.slug);
@@ -233,7 +257,9 @@ export async function sendSupporterDigest(args: {
     )
     .join("");
 
+  const unsubscribe = await unsubscribeUrl(args.userId);
   const ok = await send({
+    unsubscribe,
     to: args.to,
     subject: `The ${args.projects.length} you backed, yesterday`,
     html: shell(
@@ -251,6 +277,7 @@ export async function sendSupporterDigest(args: {
             : `You have <strong style="color:#f2eff7">${args.centsLeft}¢</strong> left in your jar.`,
         ) +
         button(SITE_URL, "Find someone to back"),
+      unsubscribe,
     ),
   });
   if (!ok) await release(args.userId, "supporter-digest", args.day);
