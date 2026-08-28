@@ -92,17 +92,35 @@ export function ConsentBanner() {
 
   if (choice !== "unset") return null;
 
+  /*
+   * Top on phones, bottom on desktop.
+   *
+   * X and Instagram open links in a webview that starts as a partial-height
+   * sheet: the page is full height but only its top is on screen until the
+   * user drags it up. Anything pinned to bottom-0 is then simply below the
+   * fold, and no amount of padding or safe-area inset reaches it — the
+   * buttons were unreachable in X's in-app browser, which is exactly where
+   * this product's traffic arrives from.
+   *
+   * The safe-area padding stays for iOS, where the home indicator overlaps a
+   * bottom bar on a normal browser.
+   */
   return (
     <div
       role="dialog"
       aria-label="Cookies"
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-ink-2/95 backdrop-blur"
+      className="fixed inset-x-0 top-0 z-50 border-b border-line bg-ink-2/95 backdrop-blur sm:bottom-0 sm:top-auto sm:border-b-0 sm:border-t sm:pb-[env(safe-area-inset-bottom)]"
     >
-      <div className="mx-auto flex max-w-3xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:gap-5">
+      <div className="mx-auto flex max-w-3xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:gap-5 sm:py-4">
         <p className="flex-1 text-sm leading-relaxed text-mute">
-          We count visits to see what people actually read. Say yes and we can
-          tell a returning visitor from a new one, which needs a cookie. Say no
-          and we still count the visit, just without one.{" "}
+          {/* Short on phones: a banner that needs four lines to make its point
+              is a banner people dismiss without reading either way. */}
+          <span className="sm:hidden">We count visits. Allow a cookie and we can tell a returning visitor from a new one. </span>
+          <span className="hidden sm:inline">
+            We count visits to see what people actually read. Say yes and we can
+            tell a returning visitor from a new one, which needs a cookie. Say no
+            and we still count the visit, just without one.{" "}
+          </span>
           <Link
             href="/legal/privacy"
             className="text-chalk underline underline-offset-4"
