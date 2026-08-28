@@ -236,7 +236,30 @@ if (!key) {
     else warn("Stripe Tax unreadable", tax.error.message);
   } else if (tax.status === "active") {
     pass("Stripe Tax active", `head office ${tax.head_office?.address?.country ?? "?"}`);
-    if (taxWanted) pass("checkout will calculate VAT", "prices are tax-inclusive");
+
+    /*
+     * "Tax active" is not "tax charged". Stripe only applies VAT where you
+     * have told it you are registered, so an active account with no
+     * registrations calculates zero on every sale — silently, and looking
+     * exactly like a working setup. This check exists because the previous
+     * one said "checkout will calculate VAT" while every live calculation
+     * came back 0%.
+     */
+    if (taxWanted) {
+      const regs = await stripeGet("tax/registrations?status=all&limit=100");
+      const active = (regs.data ?? []).filter((r) => r.status === "active");
+      if (active.length === 0) {
+        fail(
+          "no tax registrations",
+          "Stripe Tax is active but registered nowhere, so it calculates 0% for every country — verify with a calculation before believing any VAT number",
+        );
+      } else {
+        pass(
+          "tax registrations",
+          active.map((r) => r.country).join(", "),
+        );
+      }
+    }
     else warn("STRIPE_TAX=0 but Tax is active", "you are selling to EU consumers without collecting VAT");
   } else {
     gate(
