@@ -83,27 +83,37 @@ export function FaceRow({
   size = 30,
   max = 12,
   linked = false,
+  total,
 }: {
   faces: { handle: string; avatarUrl: string | null }[];
   size?: number;
   max?: number;
   linked?: boolean;
+  /** True number of people, when `faces` is only a sample of them. */
+  total?: number;
 }) {
   const shown = faces.slice(0, max);
-  const rest = faces.length - shown.length;
+  const rest = (total ?? faces.length) - shown.length;
   return (
-    <span className="inline-flex items-center align-middle">
-      {shown.map((f, i) => (
-        <span
-          key={f.handle}
-          className="inline-block"
-          style={{ marginLeft: i === 0 ? 0 : -size * 0.28 }}
-        >
-          <Face handle={f.handle} avatarUrl={f.avatarUrl} size={size} linked={linked} />
-        </span>
-      ))}
+    <span className="inline-flex min-w-0 items-center align-middle">
+      {/* Faces clip before the count does — the count is the part that has
+          to survive a narrow phone. */}
+      <span className="flex min-w-0 items-center overflow-hidden">
+        {shown.map((f, i) => (
+          <span
+            key={f.handle}
+            className="inline-block shrink-0"
+            style={{ marginLeft: i === 0 ? 0 : -size * 0.28 }}
+          >
+            <Face handle={f.handle} avatarUrl={f.avatarUrl} size={size} linked={linked} />
+          </span>
+        ))}
+      </span>
       {rest > 0 && (
-        <span className="ml-2 font-mono text-xs text-mute tabular" aria-label={`${rest} more`}>
+        <span
+          className="ml-2 shrink-0 font-mono text-xs text-mute tabular"
+          aria-label={`${rest} more`}
+        >
           +{rest}
         </span>
       )}

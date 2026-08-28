@@ -35,7 +35,11 @@ export type BoardEntry = {
   backers: number;
   backersToday: number;
   lastLoveAt: string | null;
+  /** A sample of the backers — the queries cap this, so never count it. */
   faces: Face[];
+  /** How many people `faces` is a sample *of*. Not always `backers`: RISING
+   *  shows today's faces, so its total is `backersToday`. */
+  faceTotal: number;
 };
 
 /* ------------------------------------------------------------------ LOVED */
@@ -103,6 +107,7 @@ function toBoardEntry(row: Record<string, unknown>, i: number): BoardEntry {
     backersToday: Number(row.backers_today ?? 0),
     lastLoveAt: row.last_love_at ? isoTime(row.last_love_at) : null,
     faces: (row.faces as Face[] | null) ?? [],
+    faceTotal: Number(row.backers ?? 0),
   };
 }
 
@@ -199,6 +204,8 @@ export async function risingBoard(limit = 50): Promise<RisingEntry[]> {
 
   return rows.map((row, i) => ({
     ...toBoardEntry(row, i),
+    // RISING's face lateral is scoped to today, unlike LOVED's 7-day one.
+    faceTotal: Number(row.backers_today ?? 0),
     multiplier: Number(row.multiplier ?? 0),
     average: Number(row.average ?? 0),
   }));
