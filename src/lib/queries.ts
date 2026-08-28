@@ -4,6 +4,8 @@ import {
   BOARD_WINDOW_DAYS,
   DAILY_GIVE_CEILING,
   RALLY_HOURS,
+  RALLY_MAX_GOAL,
+  RALLY_MIN_GOAL,
 } from "./config";
 
 /*
@@ -497,33 +499,40 @@ export async function activeRally(projectId: number): Promise<Rally | null> {
   };
 }
 
-export async function startRally(
-  projectId: number,
-  goal: number,
-): Promise<{ ok: true; rally: Rally } | { ok: false; error: string }> {
-  try {
-    const rows = (await sql`
-      INSERT INTO rallies (project_id, starts_at, ends_at, goal)
-      VALUES (${projectId}, now(), now() + ${`${RALLY_HOURS} hours`}::interval, ${goal})
-      RETURNING id, starts_at, ends_at, goal
-    `) as Record<string, unknown>[];
-    const row = rows[0];
-    return {
-      ok: true,
-      rally: {
-        id: Number(row.id),
-        startsAt: isoTime(row.starts_at),
-        endsAt: isoTime(row.ends_at),
-        goal: Number(row.goal),
-        progress: 0,
-      },
-    };
-  } catch (err) {
-    if (isUniqueViolation(err)) {
-      return { ok: false, error: "rally_already_this_week" };
-    }
-    throw err;
-  }
+/**
+ * Open today's rally for a project, if it has not got one.
+ *
+ * Rallies are opened for projects, never by them — the nightly job does every
+ * listed project at 00:05 UTC. This covers the gap that leaves: a project
+ * listed at noon would otherwise sit rally-less until the next morning, which
+ * is the one day its owner is most likely to be looking at it.
+ *
+ * Idempotent by the one_rally_per_day index, so calling it twice is a no-op
+ * rather than a second rally.
+ */
+export async function openTodaysRally(projectId: number): Promise<void> {
+  await sql`
+    WITH best AS (
+      SELECT COALESCE(MAX(backers), 0) AS backers
+      FROM (
+        SELECT COUNT(DISTINCT from_user_id) AS backers
+        FROM loves
+        WHERE project_id = ${projectId}
+          AND day_utc >= (now() AT TIME ZONE 'utc')::date - 7
+        GROUP BY day_utc
+      ) d
+    )
+    INSERT INTO rallies (project_id, starts_at, ends_at, goal)
+    SELECT ${projectId},
+           date_trunc('day', now() AT TIME ZONE 'utc') AT TIME ZONE 'utc',
+           (date_trunc('day', now() AT TIME ZONE 'utc') AT TIME ZONE 'utc')
+             + ${`${RALLY_HOURS} hours`}::interval,
+           LEAST(${RALLY_MAX_GOAL}::int,
+                 GREATEST(${RALLY_MIN_GOAL}::int,
+                          CEIL(best.backers * 1.2)::int))
+    FROM best
+    ON CONFLICT DO NOTHING
+  `;
 }
 
 /* ------------------------------------------------------------------- LOVE */

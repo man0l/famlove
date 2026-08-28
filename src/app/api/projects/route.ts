@@ -3,7 +3,7 @@ import { after } from "next/server";
 import { requireUser } from "@/lib/session";
 import { sql } from "@/lib/db";
 import { freeSlug, normalizeUrl } from "@/lib/users";
-import { isUniqueViolation } from "@/lib/queries";
+import { isUniqueViolation, openTodaysRally } from "@/lib/queries";
 import { publicHttpUrl, fetchSiteMeta } from "@/lib/metadata";
 
 export async function POST(request: NextRequest) {
@@ -61,6 +61,13 @@ export async function POST(request: NextRequest) {
 
   const project = created[0];
   if (!project) return fail("Couldn't save that one. Try again.");
+
+  /*
+   * Its first rally opens now rather than at tomorrow's 00:05, so the wall a
+   * builder is looking at seconds after listing already has a goal and a
+   * clock on it. Idempotent, so the nightly job simply finds it there.
+   */
+  await openTodaysRally(project.id);
 
   /*
    * The form reads the site in the browser, which covers everybody with

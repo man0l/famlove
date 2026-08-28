@@ -5,7 +5,12 @@ import {
   sendSupporterDigest,
   type SupporterLine,
 } from "@/lib/email";
-import { DAILY_GIVE_CEILING, RALLY_HOURS, RALLY_MIN_GOAL } from "@/lib/config";
+import {
+  DAILY_GIVE_CEILING,
+  RALLY_HOURS,
+  RALLY_MAX_GOAL,
+  RALLY_MIN_GOAL,
+} from "@/lib/config";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -170,11 +175,16 @@ export async function GET(request: NextRequest) {
   /* ------------------------------------------------------ today's rallies */
   if (run("rally")) {
     /*
-     * A rally a day, opened for the project rather than by it. Only for
-     * projects with a pulse in the last week — sixty rallies reading 0/50
-     * would make the board look abandoned rather than busy. The goal is the
-     * project's own best day plus a fifth, so it is always a stretch and
-     * never an insult.
+     * A rally a day, for every listed project, opened for the project rather
+     * than by it.
+     *
+     * It used to skip projects with no pulse in the last week, on the theory
+     * that a board full of 0/50 rallies looks abandoned. That reasoning had
+     * two holes. The owner box promised "a rally opens itself each morning"
+     * and then showed a Start button to exactly the people it had skipped —
+     * the ones with nothing yet, who need the nudge most. And a new project's
+     * goal is not 50: with no history the formula floors at RALLY_MIN_GOAL,
+     * so it reads 0 of 5, which is an invitation rather than an epitaph.
      *
      * The best day is counted from loves rather than read from daily_rollups.
      * It used to INNER JOIN that table, which made opening a rally depend on
@@ -192,19 +202,22 @@ export async function GET(request: NextRequest) {
         WHERE day_utc >= (now() AT TIME ZONE 'utc')::date - 7
         GROUP BY project_id, day_utc
       ),
-      active AS (
-        SELECT project_id, MAX(backers) AS best
+      best AS (
+        SELECT project_id, MAX(backers) AS backers
         FROM daily
         GROUP BY project_id
       )
       INSERT INTO rallies (project_id, starts_at, ends_at, goal)
-      SELECT a.project_id,
+      SELECT p.id,
              date_trunc('day', now() AT TIME ZONE 'utc') AT TIME ZONE 'utc',
              (date_trunc('day', now() AT TIME ZONE 'utc') AT TIME ZONE 'utc')
                + ${`${RALLY_HOURS} hours`}::interval,
-             GREATEST(${RALLY_MIN_GOAL}::int, CEIL(COALESCE(a.best, 0) * 1.2)::int)
-      FROM active a
-      JOIN projects p ON p.id = a.project_id AND p.removed_at IS NULL
+             LEAST(${RALLY_MAX_GOAL}::int,
+                   GREATEST(${RALLY_MIN_GOAL}::int,
+                            CEIL(COALESCE(b.backers, 0) * 1.2)::int))
+      FROM projects p
+      LEFT JOIN best b ON b.project_id = p.id
+      WHERE p.removed_at IS NULL
       ON CONFLICT DO NOTHING
       RETURNING project_id
     `) as unknown[];

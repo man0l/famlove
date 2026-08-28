@@ -240,39 +240,6 @@ export default async function ProjectPage({ params, searchParams }: Params) {
         </div>
 
         <aside className="space-y-4 lg:col-start-2 lg:row-start-2">
-          {isOwner && !rally && (
-            <form
-              action="/api/rally"
-              method="post"
-              className="rounded-[26px] border border-dashed border-line p-4"
-            >
-              <p className="display text-lg">Start today&apos;s rally</p>
-              <p className="mt-1.5 text-sm text-mute">
-                A rally opens itself each morning at 00:00 UTC with a goal
-                based on your best day. Listed since then? Start one now — a
-                stated goal and a live counter until midnight.
-              </p>
-              <div className="mt-3 flex gap-2">
-                <input
-                  type="number"
-                  name="goal"
-                  min={RALLY_MIN_GOAL}
-                  max={500}
-                  defaultValue={50}
-                  className="tabular w-20 rounded-full border border-line bg-ink px-3 py-2 text-sm outline-none focus:border-love"
-                />
-                <button
-                  type="submit"
-                  className="flex-1 rounded-full border border-line px-3 py-2 text-sm font-medium transition hover:border-love hover:text-love"
-                >
-                  Start
-                </button>
-              </div>
-              {query.rally_error && (
-                <p className="mt-2 text-xs text-love">{query.rally_error}</p>
-              )}
-            </form>
-          )}
 
           <dl className="grid grid-cols-3 gap-2">
             <Cell label="Today" value={page.backersToday} />
