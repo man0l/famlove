@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/session";
-import { SITE_URL, tierById } from "@/lib/config";
+import { SITE_URL, tierById, tierPriceId } from "@/lib/config";
 import {
   creditWallet,
   liveConfigError,
@@ -22,9 +22,12 @@ export async function POST(request: NextRequest) {
   const form = await request.formData();
   const tier = tierById(String(form.get("tier") ?? ""));
   if (!tier) {
-    return NextResponse.redirect(new URL("/wallet?error=bad_tier", request.nextUrl.origin), {
-      status: 303,
-    });
+    return NextResponse.redirect(
+      new URL("/wallet?error=bad_tier", request.nextUrl.origin),
+      {
+        status: 303,
+      },
+    );
   }
 
   const misconfigured = liveConfigError();
@@ -39,7 +42,8 @@ export async function POST(request: NextRequest) {
 
   if (!stripeConfigured()) {
     const devEnabled =
-      process.env.ALLOW_DEV_LOGIN === "1" && process.env.NODE_ENV !== "production";
+      process.env.ALLOW_DEV_LOGIN === "1" &&
+      process.env.NODE_ENV !== "production";
     if (!devEnabled) {
       return NextResponse.redirect(
         new URL("/wallet?error=payments_unavailable", request.nextUrl.origin),
@@ -69,34 +73,51 @@ export async function POST(request: NextRequest) {
     ? process.env.STRIPE_TAX === "1"
     : stripeIsLive();
 
+  const priceId = tierPriceId(tier.id);
+
   const session = await stripe().checkout.sessions.create({
     mode: "payment",
+    /*
+     * A real catalogue Price when one is configured, the inline price_data
+     * otherwise.
+     *
+     * The inline form creates no Product, so famlove's sales were
+     * indistinguishable from the other businesses sharing this Stripe account
+     * and could not be filtered by product anywhere downstream. The fallback
+     * stays because price ids are mode-specific — a live id is "no such
+     * price" against a test key — so an unconfigured environment still works.
+     *
+     * The Price carries tax_behavior=inclusive itself, which is why it is not
+     * repeated here; automatic_tax below still applies to both paths.
+     */
     line_items: [
-      {
-        quantity: 1,
-        price_data: {
-          currency: process.env.CHECKOUT_CURRENCY ?? "usd",
-          unit_amount: tier.cents,
-          /*
-           * Inclusive, not exclusive — this is load-bearing.
-           *
-           * The whole product is "$3 buys 300 cents". With exclusive tax an EU
-           * buyer is asked for $3.63 at the till and the sentence stops being
-           * true. Inclusive keeps the sticker price the price and takes VAT
-           * out of the merchant's side, which is exactly how the margin in
-           * README §money is modelled.
-           */
-          tax_behavior: taxEnabled ? "inclusive" : undefined,
-          product_data: {
-            name: `${tier.grantedCents} cents on famlove`,
-            description:
-              "Credit for showing up. 1¢ per person, per project, per day. Non-transferable, refundable while unspent.",
-            ...(process.env.STRIPE_TAX_CODE
-              ? { tax_code: process.env.STRIPE_TAX_CODE }
-              : {}),
+      priceId
+        ? { price: priceId, quantity: 1 }
+        : {
+            quantity: 1,
+            price_data: {
+              currency: process.env.CHECKOUT_CURRENCY ?? "usd",
+              unit_amount: tier.cents,
+              /*
+               * Inclusive, not exclusive — this is load-bearing.
+               *
+               * The whole product is "$3 buys 300 cents". With exclusive tax an EU
+               * buyer is asked for $3.63 at the till and the sentence stops being
+               * true. Inclusive keeps the sticker price the price and takes VAT
+               * out of the merchant's side, which is exactly how the margin in
+               * README §money is modelled.
+               */
+              tax_behavior: taxEnabled ? "inclusive" : undefined,
+              product_data: {
+                name: `${tier.grantedCents} cents on famlove`,
+                description:
+                  "Credit for showing up. 1¢ per person, per project, per day. Non-transferable, refundable while unspent.",
+                ...(process.env.STRIPE_TAX_CODE
+                  ? { tax_code: process.env.STRIPE_TAX_CODE }
+                  : {}),
+              },
+            },
           },
-        },
-      },
     ],
     // A statement descriptor people recognise is the cheapest dispute defence.
     payment_intent_data: {

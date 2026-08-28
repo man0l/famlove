@@ -31,7 +31,15 @@
     // chargeback ever meets. Requires the Terms URL to be set in Stripe's
     // Checkout settings first — with it missing, requiring acceptance makes
     // session creation fail outright and checkout simply stops opening.
-    "STRIPE_TOS_CONSENT": "1"
+    "STRIPE_TOS_CONSENT": "1",
+    // The live Stripe Prices for the three tiers. Not secrets — a price id is
+    // visible in every Checkout session. Vars rather than hardcoded because
+    // they are mode-specific: a live id is "no such price" against a test key,
+    // so leaving them unset makes checkout fall back to the inline price_data
+    // it used before and a test environment still works.
+    "STRIPE_PRICE_HOOK": "price_1U9PNPKT1bzTUiGchDYVz3QL",
+    "STRIPE_PRICE_DEFAULT": "price_1U9PNQKT1bzTUiGcRfee0h6c",
+    "STRIPE_PRICE_PATRON": "price_1U9PNRKT1bzTUiGcCYAj7gCF"
   },
   // The real domain, not <account>.workers.dev. Wrangler creates the DNS
   // record on the zone. workers.dev is off so the account-subdomain URL — and

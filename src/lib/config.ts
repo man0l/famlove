@@ -42,6 +42,28 @@ export type Tier = {
   featured?: boolean;
 };
 
+/**
+ * The live Stripe Price for each tier, if one is configured.
+ *
+ * Checkout used to build the price inline with price_data, which works but
+ * creates no catalogue Product — so famlove's sales could not be told apart
+ * from the other businesses in the same Stripe account, and never appeared in
+ * anything that filters by product. A real Price fixes both.
+ *
+ * Read from the environment rather than hardcoded because price ids are
+ * mode-specific: a live id is "no such price" against a test key. Unset, the
+ * checkout route falls back to price_data and behaves exactly as before,
+ * which is what keeps test mode and a fresh account working.
+ */
+export function tierPriceId(id: TierId): string | undefined {
+  const configured = {
+    hook: process.env.STRIPE_PRICE_HOOK,
+    default: process.env.STRIPE_PRICE_DEFAULT,
+    patron: process.env.STRIPE_PRICE_PATRON,
+  }[id];
+  return configured?.trim() || undefined;
+}
+
 export const TIERS: Tier[] = [
   {
     id: "hook",
@@ -74,8 +96,7 @@ export const tierById = (id: string): Tier | undefined =>
 export const ENTRY_TIER: Tier = TIERS[0];
 
 /** The one most people pick. Use where we are recommending, not asking. */
-export const FEATURED_TIER: Tier =
-  TIERS.find((t) => t.featured) ?? TIERS[1];
+export const FEATURED_TIER: Tier = TIERS.find((t) => t.featured) ?? TIERS[1];
 
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
