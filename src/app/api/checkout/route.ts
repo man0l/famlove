@@ -75,6 +75,19 @@ export async function POST(request: NextRequest) {
 
   const priceId = tierPriceId(tier.id);
 
+  /*
+   * Asking for terms acceptance requires a Terms URL on the Stripe account,
+   * and refusing the session outright when there is none. The live account has
+   * one; the sandbox is a different account and does not, so sending this
+   * unconditionally made checkout fail in test mode with "you cannot collect
+   * consent to your terms of service unless a URL is set".
+   *
+   * Gating on live rather than on a second flag means going back to live
+   * restores the tick-box automatically. A switch you have to remember is a
+   * dispute defence you eventually ship without.
+   */
+  const collectTos = process.env.STRIPE_TOS_CONSENT === "1" && stripeIsLive();
+
   const session = await stripe().checkout.sessions.create({
     mode: "payment",
     /*
@@ -142,7 +155,7 @@ export async function POST(request: NextRequest) {
      * (Settings → Checkout), hence the flag; the written notice below always
      * shows either way.
      */
-    ...(process.env.STRIPE_TOS_CONSENT === "1"
+    ...(collectTos
       ? { consent_collection: { terms_of_service: "required" as const } }
       : {}),
     custom_text: {
@@ -152,7 +165,7 @@ export async function POST(request: NextRequest) {
           "that you give up the 14-day right to withdraw from any cent you " +
           "spend. Unspent cents are refunded in full, anytime, no questions.",
       },
-      ...(process.env.STRIPE_TOS_CONSENT === "1"
+      ...(collectTos
         ? {
             terms_of_service_acceptance: {
               message: `I agree to the [Terms of Service](${SITE_URL}/legal/terms).`,

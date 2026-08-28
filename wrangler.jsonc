@@ -39,7 +39,13 @@
     // it used before and a test environment still works.
     "STRIPE_PRICE_HOOK": "price_1U9PNPKT1bzTUiGchDYVz3QL",
     "STRIPE_PRICE_DEFAULT": "price_1U9PNQKT1bzTUiGcRfee0h6c",
-    "STRIPE_PRICE_PATRON": "price_1U9PNRKT1bzTUiGcCYAj7gCF"
+    "STRIPE_PRICE_PATRON": "price_1U9PNRKT1bzTUiGcCYAj7gCF",
+    // The sandbox is a different Stripe account, not test mode on the live
+    // one, so its ids are unrelated. Both sets sit here and the code picks by
+    // the key in use — switching modes is only ever swapping the secret key.
+    "STRIPE_PRICE_HOOK_TEST": "price_1U9PcbKbsV4iyvw37yzqSSeV",
+    "STRIPE_PRICE_DEFAULT_TEST": "price_1U9PccKbsV4iyvw3ZhdY3bnD",
+    "STRIPE_PRICE_PATRON_TEST": "price_1U9PcdKbsV4iyvw3JUEJpDid"
   },
   // The real domain, not <account>.workers.dev. Wrangler creates the DNS
   // record on the zone. workers.dev is off so the account-subdomain URL — and

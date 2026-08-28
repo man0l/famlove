@@ -56,11 +56,28 @@ export type Tier = {
  * which is what keeps test mode and a fresh account working.
  */
 export function tierPriceId(id: TierId): string | undefined {
-  const configured = {
-    hook: process.env.STRIPE_PRICE_HOOK,
-    default: process.env.STRIPE_PRICE_DEFAULT,
-    patron: process.env.STRIPE_PRICE_PATRON,
-  }[id];
+  /*
+   * Live and test are two separate Stripe accounts here, not two modes of
+   * one, so their price ids have nothing to do with each other and both sets
+   * live side by side. Picking by the key in use means switching between them
+   * is only ever swapping STRIPE_SECRET_KEY — there is no second variable to
+   * forget, and no way to point a live key at a test price.
+   *
+   * Checked inline rather than importing stripeIsLive, which would make
+   * config and payments import each other.
+   */
+  const live = /^(sk|rk)_live_/.test(process.env.STRIPE_SECRET_KEY ?? "");
+  const configured = live
+    ? {
+        hook: process.env.STRIPE_PRICE_HOOK,
+        default: process.env.STRIPE_PRICE_DEFAULT,
+        patron: process.env.STRIPE_PRICE_PATRON,
+      }[id]
+    : {
+        hook: process.env.STRIPE_PRICE_HOOK_TEST,
+        default: process.env.STRIPE_PRICE_DEFAULT_TEST,
+        patron: process.env.STRIPE_PRICE_PATRON_TEST,
+      }[id];
   return configured?.trim() || undefined;
 }
 
