@@ -8,6 +8,7 @@ import { currentUser } from "@/lib/session";
 import { givenToday } from "@/lib/queries";
 import { sql } from "@/lib/db";
 import { Sticker } from "@/components/Sticker";
+import { ConsentBanner } from "@/components/ConsentBanner";
 
 const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
@@ -183,15 +184,13 @@ function Footer() {
  * and a measurement script has no business competing with the wall for the
  * first paint.
  *
- * Consent Mode is set to denied before the tag loads. That is not decoration
- * — famlove is an EU trader selling to consumers, and under the ePrivacy
- * rules analytics cookies need consent *before* they are set, not after. With
- * these defaults GA runs in its cookieless mode: no analytics cookie, no
- * client id stored, pings that carry no identifier. It still answers "how many
- * people came and what did they look at", which is what a tag is for at this
- * stage, and it does it without the site needing a banner it currently
- * promises not to have. Granting consent later is a call to gtag('consent',
- * 'update', …) from whatever banner gets built.
+ * Consent Mode is set to denied before the tag loads, and stays denied until
+ * the visitor says otherwise. Under ePrivacy an analytics cookie needs consent
+ * *before* it is set, so denied is the only safe thing to boot with. In that
+ * state GA runs cookieless: no analytics cookie, no client id stored, pings
+ * carrying no identifier — which is lawful without consent, so an unanswered
+ * banner never costs the basic traffic count. ConsentBanner is what calls
+ * gtag('consent', 'update', …) if the visitor allows it.
  */
 function Analytics() {
   const id = process.env.NEXT_PUBLIC_GA_ID;
@@ -228,6 +227,7 @@ export default function RootLayout({
         <main>{children}</main>
         <Footer />
         <Analytics />
+        <ConsentBanner />
       </body>
     </html>
   );

@@ -8,6 +8,7 @@ import { DAILY_GIVE_CEILING, TIERS } from "@/lib/config";
 import { formatCents, isoDay } from "@/lib/time";
 import { paymentsMode, reconcileCheckoutSession } from "@/lib/payments";
 import { Sticker } from "@/components/Sticker";
+import { TrackTopup } from "@/components/TrackTopup";
 import { TrustRow } from "@/components/TrustRow";
 
 export const dynamic = "force-dynamic";
@@ -63,6 +64,9 @@ export default async function WalletPage({
         <Sticker name="penny" size={72} float="slow" className="shrink-0" />
       </div>
 
+      {query.topped_up && query.session_id && (
+        <TrackTopup sessionId={query.session_id} />
+      )}
       {query.topped_up && (
         <Flash tone="love">
           {lateCredit > 0
@@ -130,6 +134,12 @@ export default async function WalletPage({
               <button
                 type="submit"
                 disabled={payments === "off"}
+                /* DataFast picks these up off the click itself — no handler,
+                   and nothing fires unless the visitor allowed cookies, since
+                   the script is only injected after consent. */
+                data-fast-goal="initiate_checkout"
+                data-fast-goal-tier={tier.id}
+                data-fast-goal-cents={String(tier.cents)}
                 className={`card card-hover flex h-full w-full cursor-pointer flex-col p-5 text-left ${
                   tier.featured
                     ? "border-love/60 bg-love/8 hover:border-love"

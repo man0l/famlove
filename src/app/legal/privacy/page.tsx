@@ -72,7 +72,12 @@ export default function PrivacyPage() {
             [
               "Automatically",
               "anonymous usage measurement",
-              "Google Analytics, to count visits and see which pages get read. It runs with consent defaulted to denied, which is its cookieless mode: no analytics cookie is set, no identifier is stored on your device, and your IP is truncated. That is also why this site has no cookie banner to click through.",
+              "Google Analytics, to count visits and see which pages get read. Until you answer the cookie question it runs in its cookieless mode: no cookie, no identifier stored on your device, and your IP truncated. Allowing cookies lets it tell a returning visitor from a new one.",
+            ],
+            [
+              "Only if you allow cookies",
+              "an analytics cookie",
+              "DataFast, which counts visits and which of them lead to a top-up. It sets one cookie to recognise you on a later visit, so it is never loaded until you press Allow. Press No cookies and it is never loaded at all. Your choice is remembered in your browser and you can change it by clearing this site's storage.",
             ],
           ]}
         />
@@ -85,8 +90,9 @@ export default function PrivacyPage() {
           in preventing fraud and multi-accounting (the card fingerprint and the
           account-age check); your consent (the email — given either on the X
           consent screen or by typing it in, and withdrawn by the unsubscribe
-          link in any email we send); and legal obligation (keeping tax
-          records).
+          link in any email we send; and analytics cookies, given or refused
+          on the banner, and changed by clearing this site&apos;s storage); and
+          legal obligation (keeping tax records).
         </p>
       </Section>
 
@@ -111,7 +117,8 @@ export default function PrivacyPage() {
             ["Neon", "the database", "United States"],
             ["Cloudflare", "hosting and delivery", "United States / global edge"],
             ["Resend", "the one email, if you opt in", "United States"],
-            ["Google", "anonymous usage measurement, cookieless", "United States"],
+            ["Google", "anonymous usage measurement", "United States"],
+            ["DataFast", "visit and conversion analytics, only with consent", "United States"],
             ["Upstash", "rate limiting, if enabled", "United States"],
           ]}
         />
