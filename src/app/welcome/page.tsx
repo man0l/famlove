@@ -11,8 +11,10 @@ export const metadata: Metadata = { title: "One thing" };
 /**
  * The one screen between signing in and getting on with it.
  *
- * X gives famlove no email address, so this is the only moment the question
- * gets asked while somebody is already mid-flow and paying attention. It is
+ * Reached only when X did not hand over an address — the app asks for it,
+ * but not every account has a confirmed one. This is then the only moment
+ * the question gets asked while somebody is already mid-flow and paying
+ * attention. It is
  * deliberately not a gate — "Skip" is a real button that records the answer
  * so nobody is asked twice — because the person on the other side may have
  * arrived to spend a cent on a friend, and standing between them and that

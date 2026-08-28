@@ -9,9 +9,19 @@ import { MIN_X_ACCOUNT_AGE_DAYS, MIN_X_POSTS, SITE_URL } from "./config";
 const AUTHORIZE = "https://x.com/i/oauth2/authorize";
 const TOKEN = "https://api.x.com/2/oauth2/token";
 const ME =
-  "https://api.x.com/2/users/me?user.fields=created_at,profile_image_url,public_metrics,username,name";
+  "https://api.x.com/2/users/me?user.fields=created_at,profile_image_url," +
+  "public_metrics,username,name,confirmed_email";
 
-export const X_SCOPES = ["users.read", "tweet.read"];
+/*
+ * users.email is what lets /2/users/me return confirmed_email, so the address
+ * arrives with the sign-in instead of being asked for afterwards. It is not
+ * free: X only honours it once the app has "Request email from users" enabled
+ * in the developer portal, which in turn requires the terms and privacy URLs
+ * to be filled in. And even then it can come back empty — an account with no
+ * confirmed address, or someone who declined that part of the consent screen —
+ * so the ask on /welcome stays as the fallback rather than being deleted.
+ */
+export const X_SCOPES = ["users.read", "tweet.read", "users.email"];
 
 export function xConfigured(): boolean {
   return Boolean(process.env.X_CLIENT_ID && process.env.X_CLIENT_SECRET);
@@ -68,6 +78,8 @@ export type XProfile = {
   avatarUrl: string | null;
   createdAt: string;
   tweetCount: number;
+  /** Only present when the app is approved for it and the account has one. */
+  email: string | null;
 };
 
 export async function exchangeCode(
@@ -131,6 +143,7 @@ export async function fetchProfile(accessToken: string): Promise<XProfile> {
       created_at: string;
       profile_image_url?: string;
       public_metrics?: { tweet_count?: number };
+      confirmed_email?: string;
     };
   };
   const d = json.data;
@@ -144,6 +157,7 @@ export async function fetchProfile(accessToken: string): Promise<XProfile> {
     avatarUrl: d.profile_image_url?.replace("_normal", "_400x400") ?? null,
     createdAt: d.created_at,
     tweetCount: d.public_metrics?.tweet_count ?? 0,
+    email: d.confirmed_email?.trim() || null,
   };
 }
 

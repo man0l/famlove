@@ -9,8 +9,9 @@ import { unsubscribeUrl } from "./unsubscribe";
  *   owner       — the daily digest of who showed up for you
  *   supporter   — the daily digest of how the projects you back are doing
  *
- * Two rules hold across all of them. Nobody gets one without typing an email
- * address in — X OAuth hands us no address, so silence is the default. And
+ * Two rules hold across all of them. Nobody gets one without an address we
+ * were given — from X's consent screen, or typed in — so silence is the
+ * default, and every message carries an unsubscribe that deletes it. And
  * every send is claimed in `email_sends` before it goes out, because a cron
  * that retries must not mean two copies in somebody's inbox.
  */

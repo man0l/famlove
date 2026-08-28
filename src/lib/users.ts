@@ -6,15 +6,18 @@ export type UpsertArgs = {
   displayName: string;
   avatarUrl: string | null;
   xCreatedAt: string;
+  /** From X's confirmed_email, when the app is approved for it. */
+  email?: string | null;
   isSeed?: boolean;
 };
 
 /**
  * Create or refresh a user and make sure they have a (possibly empty) jar.
  *
- * Also reports whether an email is still worth asking for — X never gives us
- * one, so somebody signing in has either typed one in before, told us no, or
- * has not been asked yet.
+ * Also reports whether an email is still worth asking for. X hands one over
+ * only when the app is approved for it and the account has a confirmed
+ * address, so somebody signing in has either arrived with one, typed one in
+ * before, told us no, or has not been asked yet.
  */
 export async function upsertUser(
   args: UpsertArgs,
@@ -34,7 +37,20 @@ export async function upsertUser(
   await sql`
     INSERT INTO wallets (user_id) VALUES (${id}) ON CONFLICT (user_id) DO NOTHING
   `;
-  return { id, wantsEmail: !row.email && !row.email_declined_at };
+
+  /*
+   * An address from X fills a blank, and only a blank. It never overwrites one
+   * somebody typed themselves — theirs is the more deliberate answer — and it
+   * never comes back after an unsubscribe, which is what email_declined_at
+   * records. Silence stays the default in both cases.
+   */
+  let email = row.email as string | null;
+  if (!email && !row.email_declined_at && args.email) {
+    await sql`UPDATE users SET email = ${args.email} WHERE id = ${id}`;
+    email = args.email;
+  }
+
+  return { id, wantsEmail: !email && !row.email_declined_at };
 }
 
 export function slugify(input: string): string {

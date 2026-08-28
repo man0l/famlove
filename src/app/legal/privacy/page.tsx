@@ -60,9 +60,9 @@ export default function PrivacyPage() {
               "To credit your jar, to enforce one account per card, and to keep the books. We never see or store a full card number.",
             ],
             [
-              "From you, optionally",
+              "From X or from you, optionally",
               "an email address",
-              "Only to send the one email famlove has: who showed up for your project today. Leave it blank and you get none.",
+              "If you allow it on the X consent screen we receive your confirmed address; otherwise we only have one if you type it in. Used solely for famlove's own emails: who showed up for your project, and the daily digests. Every one carries an unsubscribe link, and unsubscribing deletes the address.",
             ],
             [
               "Automatically",
@@ -78,8 +78,10 @@ export default function PrivacyPage() {
           Under the GDPR: performing our contract with you (running your
           account, taking payment, placing your avatar); our legitimate interest
           in preventing fraud and multi-accounting (the card fingerprint and the
-          account-age check); your consent (the email, which you can withdraw by
-          clearing the field); and legal obligation (keeping tax records).
+          account-age check); your consent (the email — given either on the X
+          consent screen or by typing it in, and withdrawn by the unsubscribe
+          link in any email we send); and legal obligation (keeping tax
+          records).
         </p>
       </Section>
 

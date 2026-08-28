@@ -200,8 +200,9 @@ export default async function WalletPage({
             <h2 className="display text-xl">Get the good email</h2>
             <p className="mt-1 text-sm text-mute">
               One email, ever: &ldquo;N people showed up for you today&rdquo;,
-              with their handles. Nothing else. X doesn&apos;t hand us your
-              address, so this is opt-in.
+              with their handles. Nothing else. We only have your address if
+              X passed it on or you type it here — and every email we send can
+              unsubscribe you in one click.
             </p>
           </div>
         </div>

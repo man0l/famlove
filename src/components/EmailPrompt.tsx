@@ -2,11 +2,12 @@
  * Ask for an address at the only moment it obviously earns one: standing on
  * your own wall, wondering who turned up.
  *
- * X hands us no email — the scopes famlove requests deliberately don't
- * include it — so without this the daily digest and the "somebody showed up"
- * note simply never fire, and nobody ever finds out they existed. The field
- * was on /wallet, which is where you go to buy cents, not to wonder who
- * backed you.
+ * famlove asks X for the address (the users.email scope), but it only arrives
+ * when the app is approved for it and the account has a confirmed one — so
+ * for plenty of people it does not. Without this fallback the daily digest
+ * and the "somebody showed up" note simply never fire for them, and nobody
+ * ever finds out they existed. The field was on /wallet, which is where you
+ * go to buy cents, not to wonder who backed you.
  */
 export function EmailPrompt({
   next,

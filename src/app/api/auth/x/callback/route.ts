@@ -51,6 +51,7 @@ export async function GET(request: NextRequest) {
       displayName: profile.name,
       avatarUrl: profile.avatarUrl,
       xCreatedAt: profile.createdAt,
+      email: profile.email,
     });
 
     await createSession(userId);
@@ -60,11 +61,12 @@ export async function GET(request: NextRequest) {
       next && /^\/[a-zA-Z0-9/_-]*$/.test(next) ? next : "/wallet";
 
     /*
-     * X hands over no email, so the only way famlove ever gets one is by
-     * asking. Ask here, once, while the person is already mid-flow — and
-     * carry their destination through, so saying yes or no both land them
-     * where they were going. Never a gate: somebody who came to spend a cent
-     * must be able to walk past it.
+     * X hands over an address only when the app is approved for it and the
+     * account has a confirmed one, so this ask is the fallback rather than
+     * the norm. When it is needed it happens here, once, while the person is
+     * already mid-flow — and carries their destination through, so saying yes
+     * or no both land them where they were going. Never a gate: somebody who
+     * came to spend a cent must be able to walk past it.
      */
     if (wantsEmail) {
       return NextResponse.redirect(
