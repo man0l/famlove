@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Confetti } from "./Confetti";
 import { Sticker } from "./Sticker";
 import { XIcon } from "./XIcon";
+import { trackXEvent } from "./ConsentBanner";
 
 /**
  * The thirty seconds after a builder lists.
@@ -21,11 +22,29 @@ import { XIcon } from "./XIcon";
 export function ListedBanner({
   projectName,
   projectUrl,
+  slug,
 }: {
   projectName: string;
   projectUrl: string;
+  slug: string;
 }) {
   const [copied, setCopied] = useState(false);
+
+  /*
+   * The X conversion, reported from here and nowhere else.
+   *
+   * This component renders if and only if a listing actually happened *and*
+   * the viewer owns it, which makes it the truest signal of a listing in the
+   * codebase. The POST handler would count rows the database went on to
+   * reject; NewProjectForm would count submissions rather than projects.
+   *
+   * The slug is the conversion id, not just the dedupe key, so that a server
+   * report of the same listing collapses onto this one rather than doubling
+   * it — both sides can derive it without coordinating.
+   */
+  useEffect(() => {
+    trackXEvent(process.env.NEXT_PUBLIC_X_LISTED_EVENT_ID, slug);
+  }, [slug]);
 
   const post = encodeURIComponent(
     // No bare domain in the prose: X links it and unfurls that first link

@@ -17,13 +17,15 @@ import Link from "next/link";
  *                   cookieless mode: no cookie, no stored identifier. That is
  *                   lawful without consent, so basic traffic counts are never
  *                   lost to an unanswered banner. DataFast does not load.
- *   accepted      — GA consent updates to granted and DataFast is injected.
+ *   accepted      — GA consent updates to granted, and DataFast and the X
+ *                   pixel are injected.
  *   declined      — nothing changes from the unanswered state, and the answer
  *                   is remembered so the banner stops asking.
  *
- * Advertising signals stay denied in every state, because famlove does not
- * advertise and consent should not be collected for something that will not
- * happen.
+ * Google's ad signals stay denied in every state: famlove buys no Google ads,
+ * and consent should not be collected for something that will not happen. X
+ * is different — famlove does buy X ads, so its pixel loads on Allow and
+ * never before.
  */
 
 const KEY = "famlove.consent";
@@ -34,6 +36,7 @@ declare global {
     gtag?: (...args: unknown[]) => void;
     dataLayer?: unknown[];
     datafast?: (goal: string, params?: Record<string, string>) => void;
+    twq?: (...args: unknown[]) => void;
   }
 }
 
@@ -51,10 +54,76 @@ function loadDataFast() {
   document.head.appendChild(script);
 }
 
+/*
+ * X's base snippet, kept verbatim as a string on purpose.
+ *
+ * uwt.js reaches back into the stub this defines — twq.queue, twq.version,
+ * twq.exe — so rewriting it as tidy TypeScript is a guess at a private
+ * contract, and the day X changes it the guess breaks silently rather than
+ * loudly. Injected only from grant() and trackXEvent(), never on load: it is
+ * an advertising tag and sets a cookie.
+ */
+function loadXPixel() {
+  const id = process.env.NEXT_PUBLIC_X_PIXEL_ID;
+  if (!id || document.getElementById("x-pixel")) return;
+
+  const script = document.createElement("script");
+  script.id = "x-pixel";
+  script.text =
+    "!function(e,t,n,s,u,a){e.twq||(s=e.twq=function(){s.exe?s.exe.apply(s,arguments):s.queue.push(arguments);" +
+    "},s.version='1.1',s.queue=[],u=t.createElement(n),u.async=!0,u.src='https://static.ads-twitter.com/uwt.js'," +
+    "a=t.getElementsByTagName(n)[0],a.parentNode.insertBefore(u,a))}(window,document,'script');" +
+    `twq('config','${id}');`;
+  document.head.appendChild(script);
+}
+
 function grant() {
-  // Analytics only. Nothing here advertises, so the ad signals stay denied.
+  // Google's ad signals stay denied — famlove buys no Google ads.
   window.gtag?.("consent", "update", { analytics_storage: "granted" });
   loadDataFast();
+  loadXPixel();
+}
+
+/**
+ * Report a conversion to X, if and only if the visitor allowed cookies.
+ *
+ * This does not guard on `window.twq` being present, and that is the whole
+ * point. React runs effects child-first and <ConsentBanner /> is the last node
+ * in <body>, so on a cold load of /p/slug?listed=1 by somebody who consented
+ * last week, the caller's effect runs *before* the banner's. A `if (!twq)
+ * return` here would drop every conversion, and the event would sit at zero
+ * looking exactly like a campaign problem rather than a code one. So it loads
+ * the pixel itself — idempotent — and relies on the stub's queue.
+ *
+ * `conversionId` is both the dedupe key and what X is told, so that a server
+ * report of the same listing collapses onto this one instead of doubling it.
+ */
+export function trackXEvent(eventId: string | undefined, conversionId: string) {
+  if (!eventId || !conversionId) return;
+
+  let granted = false;
+  try {
+    granted = window.localStorage.getItem(KEY) === "granted";
+  } catch {
+    // Storage throws in private mode. No answer readable means no consent.
+  }
+  if (!granted) return;
+
+  /*
+   * A refresh of ?listed=1 is otherwise a second identical event, and X counts
+   * it. If sessionStorage is unavailable we fire anyway: a possible duplicate
+   * is a smaller error than a conversion nobody ever recorded.
+   */
+  const seen = `famlove.x.${eventId}.${conversionId}`;
+  try {
+    if (window.sessionStorage.getItem(seen)) return;
+    window.sessionStorage.setItem(seen, "1");
+  } catch {
+    /* fire anyway */
+  }
+
+  loadXPixel();
+  window.twq?.("event", eventId, { conversion_id: conversionId });
 }
 
 export function ConsentBanner() {
@@ -115,11 +184,16 @@ export function ConsentBanner() {
         <p className="flex-1 text-sm leading-relaxed text-mute">
           {/* Short on phones: a banner that needs four lines to make its point
               is a banner people dismiss without reading either way. */}
-          <span className="sm:hidden">We count visits. Allow a cookie and we can tell a returning visitor from a new one. </span>
+          <span className="sm:hidden">
+            We count visits, and measure our X ads. Both need a cookie — say no
+            and we still count the visit, without one.{" "}
+          </span>
           <span className="hidden sm:inline">
-            We count visits to see what people actually read. Say yes and we can
-            tell a returning visitor from a new one, which needs a cookie. Say no
-            and we still count the visit, just without one.{" "}
+            We count visits to see what people actually read, and we measure
+            whether our ads on X led anywhere. Say yes and both get a cookie —
+            one to tell a returning visitor from a new one, one to match a
+            listing back to an ad. Say no and we still count the visit, just
+            without either.{" "}
           </span>
           <Link
             href="/legal/privacy"

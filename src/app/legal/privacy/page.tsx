@@ -67,7 +67,7 @@ export default function PrivacyPage() {
             [
               "Automatically",
               "a signed session cookie",
-              "To keep you logged in. It holds your account id and nothing else. No advertising and no ad tracking, ever.",
+              "To keep you logged in. It holds your account id and nothing else. It is never used for advertising, and it is never read by anyone but us.",
             ],
             [
               "Automatically",
@@ -78,6 +78,11 @@ export default function PrivacyPage() {
               "Only if you allow cookies",
               "an analytics cookie",
               "DataFast, which counts visits and which of them lead to a top-up. It sets one cookie to recognise you on a later visit, so it is never loaded until you press Allow. Press No cookies and it is never loaded at all. Your choice is remembered in your browser and you can change it by clearing this site's storage.",
+            ],
+            [
+              "Only if you allow cookies",
+              "an advertising cookie",
+              "We buy ads on X, and X's measurement tag tells us whether an ad led to somebody listing a project. It sets a cookie and it reports that listing to X. Like the analytics cookie it is never loaded until you press Allow, and never at all if you press No cookies. It is measurement, not profiling: we do not run retargeting, and we send X nothing about people who never clicked one of our ads.",
             ],
           ]}
         />
@@ -90,9 +95,9 @@ export default function PrivacyPage() {
           in preventing fraud and multi-accounting (the card fingerprint and the
           account-age check); your consent (the email — given either on the X
           consent screen or by typing it in, and withdrawn by the unsubscribe
-          link in any email we send; and analytics cookies, given or refused
-          on the banner, and changed by clearing this site&apos;s storage); and
-          legal obligation (keeping tax records).
+          link in any email we send; and the analytics and advertising cookies,
+          given or refused together on the banner, and changed by clearing this
+          site&apos;s storage); and legal obligation (keeping tax records).
         </p>
       </Section>
 
@@ -119,13 +124,17 @@ export default function PrivacyPage() {
             ["Resend", "the one email, if you opt in", "United States"],
             ["Google", "anonymous usage measurement", "United States"],
             ["DataFast", "visit and conversion analytics, only with consent", "United States"],
+            ["X", "ad conversion measurement, only with consent", "United States"],
             ["Upstash", "rate limiting, if enabled", "United States"],
           ]}
         />
         <p className="mt-3">
           Transfers outside the EEA rely on the European Commission&apos;s
-          standard contractual clauses. We do not sell your data, and we do not
-          share it with advertisers, brokers or anyone not on this list.
+          standard contractual clauses. We do not sell your data and we do not
+          share it with brokers, or with anyone not on this list. The one
+          advertising relationship is X, above, and only if you allow cookies:
+          it is told that a listing happened after one of our ads, and nothing
+          about you beyond that.
         </p>
       </Section>
 
