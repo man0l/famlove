@@ -62,7 +62,7 @@ export default function PrivacyPage() {
             [
               "From X or from you, optionally",
               "an email address",
-              "If you allow it on the X consent screen we receive your confirmed address; otherwise we only have one if you type it in. Used solely for famlove's own emails: who showed up for your project, and the daily digests. Every one carries an unsubscribe link, and unsubscribing deletes the address.",
+              "If you allow it on the X consent screen we receive your confirmed address; otherwise we only have one if you type it in. Used for famlove's own emails — who showed up for your project, and the daily digests — and, only if you allow cookies, as a match key for measuring our X ads: your browser hashes it before it is sent, so X never receives a readable address, and we send nothing for anyone who has not allowed cookies. Every email carries an unsubscribe link, and unsubscribing deletes the address.",
             ],
             [
               "Automatically",
@@ -82,7 +82,7 @@ export default function PrivacyPage() {
             [
               "Only if you allow cookies",
               "an advertising cookie",
-              "We buy ads on X, and X's measurement tag tells us whether an ad led to somebody listing a project. It sets a cookie and it reports that listing to X. Like the analytics cookie it is never loaded until you press Allow, and never at all if you press No cookies. It is measurement, not profiling: we do not run retargeting, and we send X nothing about people who never clicked one of our ads.",
+              "We buy ads on X, and X's measurement tag tells us whether an ad led anywhere: it reports two things, listing a project and topping up your jar, the second with the amount net of VAT. If you are signed in and have given us an address, the tag also sends it as a match key — hashed in your browser, so X never receives a readable one. It sets a cookie, and like the analytics cookie it is never loaded until you press Allow and never at all if you press No cookies. It is measurement, not profiling: we do not run retargeting and we build no audiences.",
             ],
           ]}
         />

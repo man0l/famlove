@@ -38,6 +38,26 @@ export default async function WalletPage({
     }
   }
 
+  /*
+   * What this checkout was actually worth, read from our own ledger rather
+   * than from the URL — a query string is something anyone can type, and an
+   * ad platform that believes it is an ad platform being lied to. Scoped to
+   * this user so somebody else's session id reports nothing.
+   */
+  let sale: { netCents: number } | null = null;
+  if (query.topped_up && query.session_id) {
+    const [row] = (await sql`
+      SELECT gross_cents, tax_cents FROM topups
+      WHERE user_id = ${user.id}
+        AND provider = 'stripe'
+        AND provider_ref = ${query.session_id}
+        AND status = 'paid'
+    `) as { gross_cents: number; tax_cents: number }[];
+    if (row) {
+      sale = { netCents: Number(row.gross_cents) - Number(row.tax_cents) };
+    }
+  }
+
   const given = await givenToday(user.id);
   const [mine] = (await sql`
     SELECT slug FROM projects WHERE owner_id = ${user.id} AND removed_at IS NULL
@@ -65,7 +85,12 @@ export default async function WalletPage({
       </div>
 
       {query.topped_up && query.session_id && (
-        <TrackTopup sessionId={query.session_id} />
+        <TrackTopup
+          sessionId={query.session_id}
+          netCents={sale?.netCents}
+          currency={(process.env.CHECKOUT_CURRENCY ?? "usd").toUpperCase()}
+          buyerEmail={user.email}
+        />
       )}
       {query.topped_up && (
         <Flash tone="love">

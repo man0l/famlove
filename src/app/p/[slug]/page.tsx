@@ -101,6 +101,7 @@ export default async function ProjectPage({ params, searchParams }: Params) {
           projectName={project.name}
           projectUrl={`${SITE_URL}/p/${slug}`}
           slug={slug}
+          viewerEmail={user?.email}
         />
       )}
 

@@ -23,10 +23,13 @@ export function ListedBanner({
   projectName,
   projectUrl,
   slug,
+  viewerEmail,
 }: {
   projectName: string;
   projectUrl: string;
   slug: string;
+  /** Only ever the signed-in owner's own address, and only if they have one. */
+  viewerEmail?: string | null;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -43,8 +46,10 @@ export function ListedBanner({
    * it — both sides can derive it without coordinating.
    */
   useEffect(() => {
-    trackXEvent(process.env.NEXT_PUBLIC_X_LISTED_EVENT_ID, slug);
-  }, [slug]);
+    trackXEvent(process.env.NEXT_PUBLIC_X_LISTED_EVENT_ID, slug, {
+      email: viewerEmail,
+    });
+  }, [slug, viewerEmail]);
 
   const post = encodeURIComponent(
     // No bare domain in the prose: X links it and unfurls that first link

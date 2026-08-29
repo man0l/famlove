@@ -97,8 +97,18 @@ function grant() {
  *
  * `conversionId` is both the dedupe key and what X is told, so that a server
  * report of the same listing collapses onto this one instead of doubling it.
+ *
+ * `email` is a matching signal, not a payload: the X tag SHA-256s it in the
+ * browser before it goes anywhere, so no readable address is transmitted. It
+ * recovers conversions X would otherwise miss when the click and the signup
+ * are on different devices. Passed raw on purpose — hashing it here would
+ * hash it twice and match nothing.
  */
-export function trackXEvent(eventId: string | undefined, conversionId: string) {
+export function trackXEvent(
+  eventId: string | undefined,
+  conversionId: string,
+  extra?: { email?: string | null; value?: number; currency?: string },
+) {
   if (!eventId || !conversionId) return;
 
   let granted = false;
@@ -122,8 +132,17 @@ export function trackXEvent(eventId: string | undefined, conversionId: string) {
     /* fire anyway */
   }
 
+  const params: Record<string, unknown> = { conversion_id: conversionId };
+  if (extra?.email) params.email_address = extra.email;
+  // X wants currency units, not minor units, and the currency its ads account
+  // bills in. A value is meaningless without one, so they travel together.
+  if (typeof extra?.value === "number" && extra.currency) {
+    params.value = extra.value;
+    params.currency = extra.currency;
+  }
+
   loadXPixel();
-  window.twq?.("event", eventId, { conversion_id: conversionId });
+  window.twq?.("event", eventId, params);
 }
 
 export function ConsentBanner() {

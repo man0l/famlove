@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { trackXEvent } from "./ConsentBanner";
 
 /**
  * Fire the "a jar actually got topped up" goal, once.
@@ -18,9 +19,21 @@ import { useEffect } from "react";
  *
  * window.datafast only exists once the script has loaded, which only happens
  * after the visitor allows cookies. So this is consent-gated by construction:
- * no consent, no script, no call.
+ * no consent, no script, no call. trackXEvent checks the stored answer for
+ * itself, for the reason its own comment gives.
  */
-export function TrackTopup({ sessionId }: { sessionId: string }) {
+export function TrackTopup({
+  sessionId,
+  netCents,
+  currency,
+  buyerEmail,
+}: {
+  sessionId: string;
+  /** What famlove actually earned, in minor units — see below on why net. */
+  netCents?: number;
+  currency?: string;
+  buyerEmail?: string | null;
+}) {
   useEffect(() => {
     if (!sessionId) return;
     const key = `famlove.topup.${sessionId}`;
@@ -31,7 +44,36 @@ export function TrackTopup({ sessionId }: { sessionId: string }) {
       // Storage blocked. Better to risk one duplicate than to lose the goal.
     }
     window.datafast?.("topup_completed");
-  }, [sessionId]);
+
+    /*
+     * The same purchase, told to X, so a campaign can optimise for people who
+     * pay rather than people who arrive.
+     *
+     * Only when the sale is one we can see in our own ledger. /wallet is a
+     * plain URL, so ?topped_up=1&session_id=anything is a request anybody can
+     * make — and an unverified purchase event is not merely a wrong number,
+     * it is a wrong number the optimiser spends money acting on. No row, no
+     * event: a made-up id, somebody else's checkout, and a refunded one all
+     * report nothing.
+     *
+     * The value is net of VAT on purpose. Gross would report a Bulgarian
+     * buyer's €3 top-up as 20% more valuable than an American's identical one,
+     * purely because VAT is collected on top — and the campaign would learn to
+     * chase the EU. VAT is never famlove's money; reporting it as revenue
+     * teaches the optimiser something false.
+     *
+     * The session id is the conversion id here, as it is for DataFast: one
+     * checkout, one purchase, however many times /wallet?topped_up=1 is
+     * reloaded or shared.
+     */
+    if (typeof netCents === "number") {
+      trackXEvent(process.env.NEXT_PUBLIC_X_TOPUP_EVENT_ID, sessionId, {
+        email: buyerEmail,
+        value: netCents / 100,
+        currency,
+      });
+    }
+  }, [sessionId, netCents, currency, buyerEmail]);
 
   return null;
 }
