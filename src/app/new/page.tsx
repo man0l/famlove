@@ -7,7 +7,7 @@ import { Sticker } from "@/components/Sticker";
 import { NewProjectForm } from "@/components/NewProjectForm";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "List a project" };
+export const metadata: Metadata = { title: "List a product" };
 
 export default async function NewProjectPage({
   searchParams,
@@ -27,14 +27,10 @@ export default async function NewProjectPage({
   return (
     <div className="mx-auto max-w-lg px-4 py-16">
       <div className="flex items-start justify-between gap-4">
-        <h1 className="display text-4xl">List a project</h1>
+        <h1 className="display text-4xl">List a product</h1>
         <Sticker name="receipt" size={70} float="slow" className="shrink-0" />
       </div>
-      <p className="mt-3 text-mute">
-        Paste the link and we&apos;ll read your site&apos;s own icon, title and
-        description. Everything arrives filled in and everything stays
-        editable — you get the last word.
-      </p>
+      <p className="mt-3 text-mute">Paste the link. We fill in the rest.</p>
 
       {existing.length > 0 && (
         <div className="card mt-5 p-4">
@@ -60,9 +56,7 @@ export default async function NewProjectPage({
       <NewProjectForm error={query.error} />
 
       <p className="mt-6 text-sm leading-relaxed text-mute">
-        An empty wall is worse than no wall. Before you post the link anywhere,
-        ask ten people to spend a cent — a project page showing two avatars
-        signals failure louder than no page at all.
+        Ask ten people for a cent before you post. An empty wall looks dead.
       </p>
     </div>
   );

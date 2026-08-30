@@ -26,20 +26,38 @@ export default async function JoinPage({
     typeof query.next === "string" && /^\/[a-zA-Z0-9/_-]*$/.test(query.next)
       ? query.next
       : null;
+  const listing = next === "/new";
 
   return (
     <div className="mx-auto max-w-lg px-4 py-14">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="display text-4xl">
-            Two proofs.
-            <br />
-            Both cheap.
+            {listing ? (
+              <>
+                Sign in with X
+                <br />
+                to list it.
+              </>
+            ) : (
+              <>
+                Two proofs.
+                <br />
+                Both cheap.
+              </>
+            )}
           </h1>
           <p className="mt-3 text-mute">
-            An X account {MIN_X_ACCOUNT_AGE_DAYS}+ days old, and a card. Neither
-            counts on its own — that&apos;s the whole defence. Faking a hundred
-            backers means a hundred aged accounts and a hundred different cards.
+            {listing ? (
+              <>Free. X is how we know backers are real people.</>
+            ) : (
+              <>
+                An X account {MIN_X_ACCOUNT_AGE_DAYS}+ days old, and a card.
+                Neither counts on its own — that&apos;s the whole defence. Faking
+                a hundred backers means a hundred aged accounts and a hundred
+                different cards.
+              </>
+            )}
           </p>
         </div>
         <Sticker name="hands" size={80} float="slow" className="shrink-0" />
@@ -114,11 +132,20 @@ export default async function JoinPage({
         <div className="flex items-start gap-4">
           <Sticker name="penny" size={52} className="shrink-0" />
           <div className="min-w-0">
-            <h2 className="display text-xl">Then a jar of cents</h2>
+            <h2 className="display text-xl">
+              {listing ? "Cents are optional" : "Then a jar of cents"}
+            </h2>
             <p className="mt-1 text-sm text-mute">
-              You can&apos;t charge a card one cent — the fixed fee alone would
-              be 2,502% of the sale. So the vote is never the transaction: you
-              buy cents once, and every one you spend after that is free.
+              {listing ? (
+                <>Listing is free. Buy cents only if you back someone else.</>
+              ) : (
+                <>
+                  You can&apos;t charge a card one cent — the fixed fee alone
+                  would be 2,502% of the sale. So the vote is never the
+                  transaction: you buy cents once, and every one you spend after
+                  that is free.
+                </>
+              )}
             </p>
           </div>
         </div>

@@ -27,11 +27,10 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "famlove.lol — you can't buy the top",
+    default: "famlove.lol — list free, climb with your fam",
     template: "%s · famlove.lol",
   },
-  description:
-    "Rank is not dollars. It's how many separate humans spent one cent on you today. 1¢ per person, per project, per day. Hard cap, no stacking, no whales.",
+  description: "List free. Your fam ranks you — not a $17,000 bid.",
   openGraph: { siteName: "famlove.lol", type: "website", url: SITE_URL },
   twitter: { card: "summary_large_image" },
 };
@@ -114,7 +113,7 @@ async function Header() {
               </>
             ) : (
               <Link href="/new" className="btn-love px-4 py-2 text-sm font-semibold">
-                List a project
+                List your SaaS
               </Link>
             )}
           </div>
@@ -240,13 +239,17 @@ function Footer() {
  * and a measurement script has no business competing with the wall for the
  * first paint.
  *
- * Consent Mode is set to denied before the tag loads, and stays denied until
- * the visitor says otherwise. Under ePrivacy an analytics cookie needs consent
- * *before* it is set, so denied is the only safe thing to boot with. In that
- * state GA runs cookieless: no analytics cookie, no client id stored, pings
- * carrying no identifier — which is lawful without consent, so an unanswered
- * banner never costs the basic traffic count. ConsentBanner is what calls
- * gtag('consent', 'update', …) if the visitor allows it.
+ * Consent Mode defaults to denied for a first visit — ePrivacy requires that
+ * an analytics cookie is not set until the visitor says so. Returning visitors
+ * who already pressed Allow are different: the default has to come up granted
+ * *before* gtag('config'), or the landing page_view goes out as a cookieless
+ * ping (gcs=G100). On a small property those pings are not written into the
+ * regular reports (modelling needs ~1,000 consented users a day), so every
+ * X-ad click that had already consented still looked like it never arrived.
+ *
+ * The unread/denied case still sends the cookieless ping, which is lawful
+ * without a cookie. ConsentBanner is what flips storage to granted on Allow
+ * and sends a real page_view for that first yes.
  */
 function Analytics() {
   const id = process.env.NEXT_PUBLIC_GA_ID;
@@ -260,11 +263,15 @@ function Analytics() {
       <Script id="ga-init" strategy="afterInteractive">
         {`window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
+var analyticsStorage = 'denied';
+try {
+  if (localStorage.getItem('famlove.consent') === 'granted') analyticsStorage = 'granted';
+} catch (e) {}
 gtag('consent', 'default', {
   ad_storage: 'denied',
   ad_user_data: 'denied',
   ad_personalization: 'denied',
-  analytics_storage: 'denied'
+  analytics_storage: analyticsStorage
 });
 gtag('js', new Date());
 gtag('config', '${id}', { anonymize_ip: true });`}

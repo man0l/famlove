@@ -1,7 +1,7 @@
 import { exampleCard } from "@/lib/example-card";
 import { CARD_SIZE } from "@/lib/og-card";
 
-export const alt = "A famlove wall — everyone who showed up, one cent each";
+export const alt = "The card you post — everyone who showed up";
 export const size = CARD_SIZE;
 export const contentType = "image/png";
 

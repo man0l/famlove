@@ -4,8 +4,6 @@ import { Sticker } from "@/components/Sticker";
 import { lovedBoard, siteStats } from "@/lib/queries";
 import { currentUser } from "@/lib/session";
 import { sql } from "@/lib/db";
-import { ENTRY_TIER } from "@/lib/config";
-import { formatCents } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
 
@@ -15,11 +13,6 @@ export default async function HomePage() {
     siteStats(),
     currentUser(),
   ]);
-
-  // The secondary CTA quotes the entry price, not the recommended one: it is
-  // an aside next to "list your project", and $3 is a smaller thing to weigh
-  // up mid-thought than $10.
-  const anchor = ENTRY_TIER;
 
   // Does the visitor already have a wall of their own? Decides whether the
   // hero asks them to list, or shows them the thing they came back to see.
@@ -77,20 +70,18 @@ export default async function HomePage() {
             </p>
 
             {/*
-              The original thesis line, restored. It earns the top of the page
-              because it states the whole mechanic in one breath — and the
-              mechanic *is* the pitch. Everything under it was doing the same
-              job a second time, so it is gone.
+              One offer, one contrast. X-ad traffic bounces when the hero
+              explains the mechanic twice.
             */}
             <h1 className="display mt-5 text-[2.6rem] sm:text-[3.4rem]">
-              Rank isn&apos;t dollars. It&apos;s how many people spent a cent on
-              you today.
+              List free.
+              <br />
+              Climb with your fam.
             </h1>
 
             <p className="mt-5 max-w-lg text-lg leading-relaxed text-mute">
-              List your SaaS or app and get a wall of everyone who showed up.
-              One cent each, capped at one per person a day — so{" "}
-              <span className="text-chalk">nobody can buy their way past you.</span>
+              Rank is 1¢ from real people —{" "}
+              <span className="text-chalk">not a $17,000 bid.</span>
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -103,22 +94,22 @@ export default async function HomePage() {
                 </Link>
               ) : (
                 <Link href="/new" className="btn-love px-6 py-3.5 font-semibold">
-                  List your project →
+                  List your SaaS →
                 </Link>
               )}
               <Link
-                href={user ? "/wallet" : "/join?next=%2Fwallet"}
+                href={user ? "/wallet" : "#loved"}
                 className="rounded-full border border-line px-5 py-3.5 font-medium text-mute transition hover:border-line-2 hover:text-chalk"
               >
                 {user
                   ? `${user.centsBalance}¢ in your jar`
-                  : `Back someone else · ${formatCents(anchor.cents)}`}
+                  : "See the board"}
               </Link>
             </div>
 
             {/* Having one project used to remove every route to listing a
                 second — the primary button simply swapped meaning. Anyone
-                still on zero is already looking at "List your project". */}
+                still on zero is already looking at "List your SaaS". */}
             {listedSomething && (
               <p className="mt-4 text-sm text-mute">
                 Shipped something else?{" "}
@@ -168,7 +159,7 @@ export default async function HomePage() {
         </dl>
       </section>
 
-      <section className="card overflow-hidden">
+      <section id="loved" className="card scroll-mt-24 overflow-hidden">
         <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-line/70 px-5 py-4">
           <h2 className="display text-xl">
             Loved <span className="text-mute">· this week</span>
@@ -268,7 +259,7 @@ function Empty() {
       <p className="display mt-5 text-2xl">Nobody has shown up yet</p>
       <p className="mt-1.5 text-mute">Every wall starts empty. Yours too.</p>
       <Link href="/new" className="btn-love mt-5 inline-block px-6 py-3 font-semibold">
-        List a project
+        List your SaaS
       </Link>
     </div>
   );

@@ -14,10 +14,13 @@ import Link from "next/link";
  * The three states are deliberately not "on / off":
  *
  *   no answer yet — Google Analytics runs with consent denied, which is its
- *                   cookieless mode: no cookie, no stored identifier. That is
- *                   lawful without consent, so basic traffic counts are never
- *                   lost to an unanswered banner. DataFast does not load.
- *   accepted      — GA consent updates to granted, and DataFast and the X
+ *                   cookieless mode: no cookie, no stored identifier. Lawful
+ *                   without consent. Those pings do not land in GA4's regular
+ *                   reports on a small property, so an unanswered banner does
+ *                   cost the traffic count you can actually see. DataFast
+ *                   does not load at all.
+ *   accepted      — GA consent updates to granted, a real page_view is sent
+ *                   so the visit appears in reports, and DataFast and the X
  *                   pixel are injected.
  *   declined      — nothing changes from the unanswered state, and the answer
  *                   is remembered so the banner stops asking.
@@ -77,9 +80,24 @@ function loadXPixel() {
   document.head.appendChild(script);
 }
 
-function grant() {
+function grant(alreadyStored = false) {
   // Google's ad signals stay denied — famlove buys no Google ads.
   window.gtag?.("consent", "update", { analytics_storage: "granted" });
+  /*
+   * First-time Allow: config already sent a cookieless page_view (gcs=G100).
+   * GA4 does not promote those into Users / Sessions / page views until the
+   * property qualifies for behavioural modelling — thousands of consented
+   * users a day, which this site does not have. Without a granted page_view
+   * here, the visit that just said yes never appears, and X-ad clicks look
+   * like they went nowhere. Returning visitors already boot with granted
+   * storage (see layout Analytics), so a second page_view would double-count.
+   */
+  if (!alreadyStored) {
+    window.gtag?.("event", "page_view", {
+      page_location: window.location.href,
+      page_title: document.title,
+    });
+  }
   loadDataFast();
   loadXPixel();
 }
@@ -159,7 +177,7 @@ export function ConsentBanner() {
       // as consent — the safe direction is always "no cookie".
     }
     if (stored === "granted") {
-      grant();
+      grant(true);
       setChoice("granted");
     } else if (stored === "denied") {
       setChoice("denied");
@@ -174,7 +192,7 @@ export function ConsentBanner() {
     } catch {
       // Unstorable, so the banner returns next visit. Annoying, not unlawful.
     }
-    if (next === "granted") grant();
+    if (next === "granted") grant(false);
     setChoice(next);
   }, []);
 

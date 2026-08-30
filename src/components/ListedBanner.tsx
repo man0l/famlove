@@ -55,9 +55,6 @@ export function ListedBanner({
     // No bare domain in the prose: X links it and unfurls that first link
     // instead of the project below.
     `I just listed ${projectName} on famlove 🩷\n\n` +
-      `It ranks by how many people show up, not how much they spend — ` +
-      `1¢ each, capped at one per person a day. You can't buy your way up, ` +
-      `you can only be shown up for.\n\n` +
       `Spare a cent?\n${projectUrl}`,
   );
 
@@ -82,12 +79,8 @@ export function ListedBanner({
             {projectName} is live. Now go get your first cent.
           </h2>
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-mute">
-            Your wall is empty, and an empty wall says more than no wall at all.
-            Nobody can buy their way onto it —{" "}
-            <span className="text-chalk">
-              the only way it fills up is if you ask.
-            </span>{" "}
-            Send this to five people who&apos;d spend a cent on you.
+            Empty wall. Ask five people for a cent —{" "}
+            <span className="text-chalk">nobody can buy a spot.</span>
           </p>
 
           <div className="mt-5 flex flex-wrap gap-2.5">
@@ -105,7 +98,7 @@ export function ListedBanner({
               onClick={copy}
               className="rounded-full border border-line-2 px-5 py-3 text-sm font-medium text-chalk transition hover:border-love hover:text-love"
             >
-              {copied ? "Copied ✓" : "Copy link for the group chat"}
+              {copied ? "Copied ✓" : "Copy the link"}
             </button>
           </div>
         </div>
