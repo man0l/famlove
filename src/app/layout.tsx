@@ -75,7 +75,6 @@ async function Header() {
               balance is a worse first impression than an extra row. */}
           <nav className="ml-2 hidden items-center gap-1 text-sm font-medium text-mute sm:flex">
             <NavLink href="/">Loved</NavLink>
-            <NavLink href="/rising">Rising</NavLink>
             <NavLink href="/givers">Givers</NavLink>
             {mine.length > 0 && (
               <NavLink href={wallsHref}>
@@ -121,7 +120,6 @@ async function Header() {
 
         <nav className="-mx-1 flex items-center gap-1 overflow-x-auto pb-2 text-sm font-medium text-mute sm:hidden">
           <NavLink href="/">Loved</NavLink>
-          <NavLink href="/rising">Rising</NavLink>
           <NavLink href="/givers">Givers</NavLink>
           {mine.length > 0 ? (
             <NavLink href={wallsHref}>
