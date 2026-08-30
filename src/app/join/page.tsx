@@ -2,14 +2,19 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { currentUser } from "@/lib/session";
 import { xConfigured } from "@/lib/x-oauth";
-import { FEATURED_TIER, MIN_X_ACCOUNT_AGE_DAYS, TIERS } from "@/lib/config";
-import { formatCents } from "@/lib/time";
+import { MIN_X_ACCOUNT_AGE_DAYS } from "@/lib/config";
 import { Sticker } from "@/components/Sticker";
-import { TrustRow } from "@/components/TrustRow";
 import { XIcon } from "@/components/XIcon";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Get cents" };
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string>>;
+}): Promise<Metadata> {
+  const query = await searchParams;
+  return { title: query.next === "/new" ? "List your SaaS" : "Sign in" };
+}
 
 export default async function JoinPage({
   searchParams,
@@ -22,7 +27,6 @@ export default async function JoinPage({
   const query = await searchParams;
   const devLogin =
     process.env.ALLOW_DEV_LOGIN === "1" && process.env.NODE_ENV !== "production";
-  const anchor = FEATURED_TIER;
   const next =
     typeof query.next === "string" && /^\/[a-zA-Z0-9/_-]*$/.test(query.next)
       ? query.next
@@ -142,55 +146,11 @@ export default async function JoinPage({
         </form>
       )}
 
-      {listing ? (
+      {listing && (
         <p className="mt-10 text-sm text-mute">
           You don&apos;t pay to list. Cents are only if you back someone else
           later.
         </p>
-      ) : (
-        <>
-          <section className="card mt-10 p-5">
-            <div className="flex items-start gap-4">
-              <Sticker name="penny" size={52} className="shrink-0" />
-              <div className="min-w-0">
-                <h2 className="display text-xl">Then a jar of cents</h2>
-                <p className="mt-1 text-sm text-mute">
-                  You can&apos;t charge a card one cent — the fixed fee alone
-                  would be 2,502% of the sale. So the vote is never the
-                  transaction: you buy cents once, and every one you spend after
-                  that is free.
-                </p>
-              </div>
-            </div>
-
-            <ul className="mt-4 space-y-1.5">
-              {TIERS.map((tier) => (
-                <li
-                  key={tier.id}
-                  className={`flex items-baseline justify-between rounded-2xl px-4 py-2.5 text-sm ${
-                    tier.featured ? "bg-love/10 text-love-soft" : "text-mute"
-                  }`}
-                >
-                  <span className="tabular font-semibold">
-                    {formatCents(tier.cents)}
-                  </span>
-                  <span className="tabular">
-                    {tier.grantedCents.toLocaleString()} people you can back
-                  </span>
-                </li>
-              ))}
-            </ul>
-
-            <p className="mt-3 text-xs text-mute">
-              Most people never spend a whole {formatCents(anchor.cents)} jar.
-              The rest sits there until you want it back.
-            </p>
-          </section>
-
-          <div className="mt-6">
-            <TrustRow />
-          </div>
-        </>
       )}
     </div>
   );
