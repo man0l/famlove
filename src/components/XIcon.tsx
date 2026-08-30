@@ -6,9 +6,12 @@
 export function XIcon({
   size = 14,
   className = "",
+  title,
 }: {
   size?: number;
   className?: string;
+  /** When the mark stands in for the word X. Buttons that already say “X” leave this off. */
+  title?: string;
 }) {
   return (
     <svg
@@ -16,7 +19,9 @@ export function XIcon({
       width={size}
       height={size}
       fill="currentColor"
-      aria-hidden="true"
+      aria-hidden={title ? undefined : true}
+      aria-label={title}
+      role={title ? "img" : undefined}
       focusable="false"
       className={`inline-block shrink-0 ${className}`}
     >

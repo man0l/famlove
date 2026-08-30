@@ -36,7 +36,8 @@ export default async function JoinPage({
           <h1 className="display text-4xl">
             {listing ? (
               <>
-                Sign in with <XIcon size={34} className="mx-1 align-[-0.12em]" />
+                Sign in with{" "}
+                <XIcon size={34} title="X" className="mx-1 align-[-0.12em]" />
                 <br />
                 to list it.
               </>
@@ -51,12 +52,12 @@ export default async function JoinPage({
           <p className="mt-3 text-mute">
             {listing ? (
               <>
-                Free. <XIcon size={15} className="mx-0.5 align-[-0.15em]" /> is
+                Free. <XIcon size={15} title="X" className="mx-0.5 align-[-0.15em]" /> is
                 how we know backers are real people.
               </>
             ) : (
               <>
-                An <XIcon size={15} className="mx-0.5 align-[-0.15em]" /> account{" "}
+                An <XIcon size={15} title="X" className="mx-0.5 align-[-0.15em]" /> account{" "}
                 {MIN_X_ACCOUNT_AGE_DAYS}+ days old, and a card. Neither counts
                 on its own — that&apos;s the whole defence. Faking a hundred
                 backers means a hundred aged accounts and a hundred different
@@ -81,8 +82,8 @@ export default async function JoinPage({
             "That account is suspended."
           ) : query.error === "x_not_configured" ? (
             <>
-              <XIcon size={13} className="mr-1 align-[-0.15em]" /> sign-in
-              isn&apos;t configured on this deployment.
+              <XIcon size={13} title="X" className="mr-1 align-[-0.15em]" />{" "}
+              sign-in isn&apos;t configured on this deployment.
             </>
           ) : query.error === "cancelled" ? (
             "No problem — nothing happened."
@@ -107,8 +108,8 @@ export default async function JoinPage({
         </a>
       ) : (
         <p className="mt-8 rounded-2xl border border-dashed border-line px-5 py-4 text-center text-sm text-mute">
-          <XIcon size={13} className="mr-1 align-[-0.15em]" /> sign-in isn&apos;t
-          wired up here yet.
+          <XIcon size={13} title="X" className="mr-1 align-[-0.15em]" /> sign-in
+          isn&apos;t wired up here yet.
         </p>
       )}
 
@@ -120,7 +121,7 @@ export default async function JoinPage({
         >
           <p className="text-sm font-medium">Local mode</p>
           <p className="mt-1 text-sm text-mute">
-            No <XIcon size={13} className="mx-0.5 align-[-0.15em]" /> keys on
+            No <XIcon size={13} title="X" className="mx-0.5 align-[-0.15em]" /> keys on
             this machine. Sign in as any handle to play with the real rules
             against the real database.
           </p>
