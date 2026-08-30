@@ -76,7 +76,7 @@ export default async function HomePage() {
             <h1 className="display mt-5 text-[2.6rem] sm:text-[3.4rem]">
               List free.
               <br />
-              Climb with your fam.
+              Get on the board.
             </h1>
 
             <p className="mt-5 max-w-lg text-lg leading-relaxed text-mute">
