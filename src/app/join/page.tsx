@@ -142,55 +142,56 @@ export default async function JoinPage({
         </form>
       )}
 
-      <section className="card mt-10 p-5">
-        <div className="flex items-start gap-4">
-          <Sticker name="penny" size={52} className="shrink-0" />
-          <div className="min-w-0">
-            <h2 className="display text-xl">
-              {listing ? "Cents are optional" : "Then a jar of cents"}
-            </h2>
-            <p className="mt-1 text-sm text-mute">
-              {listing ? (
-                <>Listing is free. Buy cents only if you back someone else.</>
-              ) : (
-                <>
+      {listing ? (
+        <p className="mt-10 text-sm text-mute">
+          You don&apos;t pay to list. Cents are only if you back someone else
+          later.
+        </p>
+      ) : (
+        <>
+          <section className="card mt-10 p-5">
+            <div className="flex items-start gap-4">
+              <Sticker name="penny" size={52} className="shrink-0" />
+              <div className="min-w-0">
+                <h2 className="display text-xl">Then a jar of cents</h2>
+                <p className="mt-1 text-sm text-mute">
                   You can&apos;t charge a card one cent — the fixed fee alone
                   would be 2,502% of the sale. So the vote is never the
                   transaction: you buy cents once, and every one you spend after
                   that is free.
-                </>
-              )}
+                </p>
+              </div>
+            </div>
+
+            <ul className="mt-4 space-y-1.5">
+              {TIERS.map((tier) => (
+                <li
+                  key={tier.id}
+                  className={`flex items-baseline justify-between rounded-2xl px-4 py-2.5 text-sm ${
+                    tier.featured ? "bg-love/10 text-love-soft" : "text-mute"
+                  }`}
+                >
+                  <span className="tabular font-semibold">
+                    {formatCents(tier.cents)}
+                  </span>
+                  <span className="tabular">
+                    {tier.grantedCents.toLocaleString()} people you can back
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            <p className="mt-3 text-xs text-mute">
+              Most people never spend a whole {formatCents(anchor.cents)} jar.
+              The rest sits there until you want it back.
             </p>
+          </section>
+
+          <div className="mt-6">
+            <TrustRow />
           </div>
-        </div>
-
-        <ul className="mt-4 space-y-1.5">
-          {TIERS.map((tier) => (
-            <li
-              key={tier.id}
-              className={`flex items-baseline justify-between rounded-2xl px-4 py-2.5 text-sm ${
-                tier.featured ? "bg-love/10 text-love-soft" : "text-mute"
-              }`}
-            >
-              <span className="tabular font-semibold">
-                {formatCents(tier.cents)}
-              </span>
-              <span className="tabular">
-                {tier.grantedCents.toLocaleString()} people you can back
-              </span>
-            </li>
-          ))}
-        </ul>
-
-        <p className="mt-3 text-xs text-mute">
-          Most people never spend a whole {formatCents(anchor.cents)} jar. The
-          rest sits there until you want it back.
-        </p>
-      </section>
-
-      <div className="mt-6">
-        <TrustRow />
-      </div>
+        </>
+      )}
     </div>
   );
 }
