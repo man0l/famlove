@@ -5,6 +5,7 @@ import { renderCard, CARD_SIZE, CARD_CACHE } from "@/lib/og-card";
 export const alt = "The wall of everyone who showed up";
 export const size = CARD_SIZE;
 export const contentType = "image/png";
+export const dynamic = "force-dynamic";
 
 /**
  * The share artifact is the wall, not the rank — a grid of tagged humans, each

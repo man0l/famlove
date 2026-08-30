@@ -4,6 +4,7 @@ import { CARD_SIZE } from "@/lib/og-card";
 export const alt = "The card you post — everyone who showed up";
 export const size = CARD_SIZE;
 export const contentType = "image/png";
+export const dynamic = "force-dynamic";
 
 /**
  * The card for famlove.lol itself, and for every page that doesn't draw its
