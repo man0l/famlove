@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     default: "famlove.lol — list free, get on the board",
     template: "%s · famlove.lol",
   },
-  description: "List free. Get on the board — not a $17,000 bid.",
+  description: "List free. Get on the board — not a $17,000 outbid bid.",
   openGraph: { siteName: "famlove.lol", type: "website", url: SITE_URL },
   twitter: { card: "summary_large_image" },
 };

@@ -81,7 +81,7 @@ export default async function HomePage() {
 
             <p className="mt-5 max-w-lg text-lg leading-relaxed text-mute">
               Rank is 1¢ from real people —{" "}
-              <span className="text-chalk">not a $17,000 bid.</span>
+              <span className="text-chalk">not a $17,000 outbid bid.</span>
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
